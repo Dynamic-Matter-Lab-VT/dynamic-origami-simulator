@@ -16,7 +16,7 @@ from scipy.integrate import solve_ivp
 from numba import jit, prange
 from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning, NumbaWarning
 import warnings
-from ..geometries.base_geom import BaseGeometry
+from src.geometries.base_geom import BaseGeometry
 from tqdm import tqdm
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
@@ -248,7 +248,7 @@ def bar_hinge_model(t, x):
     return dx_dt
 
 
-def get_solution(geom_, filename_='test.pkl', zeta_=0.01, k_axial_=20.0, k_facet_=0.75, k_fold_=0.8, dt_=0.01,
+def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=0.01, k_axial_=20.0, k_facet_=0.75, k_fold_=0.8, dt_=0.01,
                  t_max_=20.0):
     """
         Solve the equations of motion for the origami structure.
@@ -310,5 +310,5 @@ if __name__ == '__main__':
 
     geom = BaseGeometry(a, b, xn, yn, True)
 
-    filename = 'test.pkl'
+    filename = 'SimpleSpring.pkl'
     get_solution(geom, filename, 0.01, 20.0, 0.75, 0.8, 0.01, 20.0)

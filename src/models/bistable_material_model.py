@@ -304,7 +304,7 @@ def bar_hinge_model(t, x):
     return dx_dt
 
 
-def get_solution(geom_, filename_='test.pkl', zeta_=0.01, k_axial_=5.0, k_facet_=0.1, k_fold_=15.0, k_str_spring_=0.75,
+def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=0.01, k_axial_=5.0, k_facet_=0.1, k_fold_=15.0, k_str_spring_=0.75,
                  dt_=0.01, t_max_=10.0):
     global geom, filename, zeta, k_axial, k_facet, k_fold, k_str_spring, dt, t_max, i_max, j_max, node_props, bars, \
         hinges, vhinges, hhinges, force_external, force_axial, force_crease, force_damping, nodes0, vel0, t_sim, x0, \
@@ -363,5 +363,5 @@ if __name__ == '__main__':
     yn = 5
 
     geom = BistableMaterialGeometry(a, xn, yn, False)
-    filename = 'test.pkl'
+    filename = 'SimpleSpring.pkl'
     get_solution(geom, filename, 0.01, 20.0, 0.75, 0.8, 0.01, 20.0)

@@ -14,8 +14,8 @@ warnings.simplefilter('ignore', category=NumbaWarning)
 
 @jit(fastmath=True, cache=True)
 def update_node_props():
-    global node_props, i_max
-    for i in range(i_max // 5):
+    global node_props, i_max, n
+    for i in range(i_max // n):
         node_props[i][1] = True
 
 
@@ -82,7 +82,7 @@ def dynamic_model(t, z):
 
 def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=30, k_axial_=10000, k_shear_=10000, dt_=0.01, t_max_=30):
     global geom, zeta, k_axial, k_shear, dt, x, x0, i_max, force_external, force_axial, force_shear, force_damping, \
-        node_props, t_sim, computation_progress, pbar, z0, t_max, filename
+        node_props, t_sim, computation_progress, pbar, z0, t_max, filename, n
 
     filename = filename_
 
@@ -95,6 +95,7 @@ def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=30, k_axial_=10000, 
     x = geom.x
     x0 = geom.x0
     i_max = geom.i_max
+    n = geom.n
 
     force_external = np.zeros((i_max, 3))
     force_axial = np.zeros((i_max, 3))

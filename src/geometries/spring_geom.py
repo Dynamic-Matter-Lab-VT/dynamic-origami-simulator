@@ -30,8 +30,8 @@ class SpringGeometry:
         for i in range(self.n):
             for j in range(m):
                 idx = i * m + j
-                x[idx, 0] = self.d / 2 * np.cos(2 * np.pi * j / m)
-                x[idx, 1] = self.d / 2 * np.sin(2 * np.pi * j / m)
+                x[idx, 0] = (self.d / 2 - (i + j / m) * self.p * np.tan(self.th)) * np.cos(2 * np.pi * j / m)
+                x[idx, 1] = (self.d / 2 - (i + j / m) * self.p * np.tan(self.th)) * np.sin(2 * np.pi * j / m)
                 x[idx, 2] = (i + j / m) * self.p
 
         return x
@@ -54,7 +54,7 @@ class SpringGeometry:
             self.spring_curves.append(
                 vp.curve(pos=[vp.vector(self.x[i, 0], self.x[i, 1], self.x[i, 2]),
                               vp.vector(self.x[i + 1, 0], self.x[i + 1, 1], self.x[i + 1, 2])],
-                         color=vp.color.white, radius=self.d / 30))
+                         color=vp.color.white, radius=self.d / 40))
 
     def update_vp_nodes(self, colors=None):
         for i in range(self.i_max):
@@ -70,23 +70,43 @@ class SpringGeometry:
 
     def update_geometry(self):
         self.x = self.get_spring_shape()
+        self.i_max = self.x.shape[0]
+        self.x0 = self.x.copy()
+        self.vp_nodes = self.create_vp_nodes()
         self.update_vp_nodes()
         self.update_spring_curves()
 
     def widget(self):
-        vp.slider(min=0, max=10, value=0, bind=self.slider_p)
+        self.scene.append_to_caption("""\n Instructions:
+        Drag mouse or one finger to rotate.
+        Pinch or two fingers to zoom.\n\n\n""")
+        self.scene.append_to_caption("""pitch (p): """)
+        vp.slider(min=0, max=5, value=0.1, bind=self.slider_p)
+        self.scene.append_to_caption("""\n""")
+        self.scene.append_to_caption("""taper angle (th): """)
+        vp.slider(min=0, max=np.pi / 4, value=0, bind=self.slider_th)
+        self.scene.append_to_caption("""\n""")
 
     def slider_p(self, p):
         self.p = p.value
+
+    def slider_th(self, th):
+        self.th = th.value
+
+    def slider_n(self, n):
+        self.n = int(n.value)
+
+    def slider_d(self, d):
+        self.d = d.value
 
     def spin(self):
         if self.visualize:
             self.widget()
             while True:
                 self.update_geometry()
-                vp.rate(60)
+                vp.rate(10)
 
 
 if __name__ == '__main__':
-    spring = SpringGeometry(1, 0.1, 10, 0)
+    spring = SpringGeometry(0.3, 0.06, 10, 10 * np.pi / 180, True)
     spring.spin()

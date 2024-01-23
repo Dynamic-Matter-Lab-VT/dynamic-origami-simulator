@@ -92,8 +92,12 @@ def slider_time_scale(s):
     time_scale = s.value
 
 
+def update_sim_time(t):
+    pass
+
+
 def simulate(geom_, solution_):
-    global show_strain, paused, strain_scale, time_scale, pause_button, strain_checkbox, slider1, slider2, text
+    global show_strain, paused, strain_scale, time_scale, pause_button, strain_checkbox, slider1, slider2, text, curr_time, time_slider, geom
     x_sol = solution_
     params = x_sol.sol
     geom = geom_
@@ -101,9 +105,18 @@ def simulate(geom_, solution_):
 
     i_max = geom.i_max
 
+    geom.scene.append_to_caption("""\n""")
+    time_slider = vp.slider(min=0, max=x_sol.t[-1], value=0, bind=update_sim_time, textwrap=True, length=1000)
+    geom.scene.append_to_caption("""\n""")
+
     pause_button = vp.button(text='Pause', bind=pause_button_func)
+    geom.scene.append_to_caption("""\n\n""")
     strain_checkbox = vp.checkbox(text='Show Strain', bind=strain_checkbox_func)
+    geom.scene.append_to_caption("""\n\n""")
+    geom.scene.append_to_caption("""strain scale: """)
     slider1 = vp.slider(min=0, max=10000, value=20, bind=slider_strain_scale, textwrap=True, length=400)
+    geom.scene.append_to_caption("""\n\n""")
+    geom.scene.append_to_caption("""time scale: """)
     slider2 = vp.slider(min=0, max=10, value=1, bind=slider_time_scale, textwrap=True, length=400)
 
     text = vp.wtext(text='fps: ')
@@ -114,6 +127,8 @@ def simulate(geom_, solution_):
                 time.sleep(0.05)
             t0 = time.time()
             geom.x = x_sol.y[:geom.i_max * 3, sol_t].reshape((geom.i_max, 3))
+            curr_time = x_sol.t[sol_t]
+            time_slider.value = curr_time
 
             if not show_strain:
                 geom.update_vp_nodes([vp.color.white for j in range(0, i_max)])

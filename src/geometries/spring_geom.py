@@ -2,6 +2,13 @@ import numpy as np
 import vpython as vp
 
 
+def spring_curve(d, p, th, t):
+    z = t / (2 * np.pi) * p
+    x = (d / 2 - z * np.tan(th)) * np.cos(t)
+    y = (d / 2 - z * np.tan(th)) * np.sin(t)
+    return x, y, z
+
+
 class SpringGeometry:
 
     def __init__(self, d, p, n, th, visualize=True):
@@ -11,6 +18,7 @@ class SpringGeometry:
         self.th = th
         self.n = int(n)
         self.visualize = visualize
+        self.res = 300
 
         self.x = self.get_spring_shape()
 
@@ -25,15 +33,17 @@ class SpringGeometry:
             self.draw()
 
     def get_spring_shape(self):
-        m = int(50 * self.d)
-        x = np.zeros((m * self.n, 3))
-        for i in range(self.n):
-            for j in range(m):
-                idx = i * m + j
-                x[idx, 0] = (self.d / 2 - (i + j / m) * self.p * np.tan(self.th)) * np.cos(2 * np.pi * j / m)
-                x[idx, 1] = (self.d / 2 - (i + j / m) * self.p * np.tan(self.th)) * np.sin(2 * np.pi * j / m)
-                x[idx, 2] = (i + j / m) * self.p
-
+        t = np.linspace(0, 2 * self.n * np.pi, self.res)
+        l = np.trapz(
+            ((self.d / 2 - self.p * np.tan(self.th) / (2 * np.pi) * t) ** 2 + (self.p / (2 * np.pi)) ** 2) ** 0.5, t)
+        ls = np.linspace(0, l, self.res)
+        ts = np.zeros_like(ls)
+        for i in range(1, self.res):
+            ts[i] = ts[i - 1] + l / (
+                    self.res * ((self.d / 2 - self.p * np.tan(self.th) / (2 * np.pi) * ts[i - 1]) ** 2 + (
+                    self.p / (2 * np.pi)) ** 2) ** 0.5)
+        x = np.zeros((self.res, 3))
+        x[:, 0], x[:, 1], x[:, 2] = spring_curve(self.d, self.p, self.th, ts)
         return x
 
     def create_vp_nodes(self):
@@ -81,7 +91,7 @@ class SpringGeometry:
         Drag mouse or one finger to rotate.
         Pinch or two fingers to zoom.\n\n\n""")
         self.scene.append_to_caption("""pitch (p): """)
-        vp.slider(min=0, max=5, value=0.1, bind=self.slider_p)
+        vp.slider(min=0, max=self.d, value=0.1, bind=self.slider_p)
         self.scene.append_to_caption("""\n""")
         self.scene.append_to_caption("""taper angle (th): """)
         vp.slider(min=0, max=np.pi / 4, value=0, bind=self.slider_th)

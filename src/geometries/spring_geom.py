@@ -11,14 +11,14 @@ def spring_curve(d, p, th, t):
 
 class SpringGeometry:
 
-    def __init__(self, d, p, n, th, visualize=True):
+    def __init__(self, d, p, n, th, visualize=True, res=100):
         self.params = ['SpringGeometry', d, p, n, th]
         self.d = d
         self.p = p
         self.th = th
         self.n = int(n)
         self.visualize = visualize
-        self.res = 300
+        self.res = res
 
         self.x = self.get_spring_shape()
 

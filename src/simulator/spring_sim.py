@@ -114,7 +114,7 @@ def simulate(geom_, solution_):
     strain_checkbox = vp.checkbox(text='Show Strain', bind=strain_checkbox_func)
     geom.scene.append_to_caption("""\n\n""")
     geom.scene.append_to_caption("""strain scale: """)
-    slider1 = vp.slider(min=0, max=10000, value=20, bind=slider_strain_scale, textwrap=True, length=400)
+    slider1 = vp.slider(min=0, max=50000, value=20, bind=slider_strain_scale, textwrap=True, length=400)
     geom.scene.append_to_caption("""\n\n""")
     geom.scene.append_to_caption("""time scale: """)
     slider2 = vp.slider(min=0, max=10, value=1, bind=slider_time_scale, textwrap=True, length=400)

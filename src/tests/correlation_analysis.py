@@ -33,3 +33,17 @@ if __name__ == '__main__':
         # save in high resolution
         plot_name = data_dir + '../plots/correlation_matrix_' + str(freq) + 'hz.png'
         fig.savefig(plot_name, dpi=300)
+
+        scores = np.zeros((i_max, 1))
+        for i in range(i_max):
+            scores[i] = np.sum(corr[i, :]) - corr[i, i]
+
+        fig = plt.figure('Scores ' + str(freq) + ' Hz')
+        plt.plot(scores)
+        plt.xlabel('Sensor Number')
+        plt.ylabel('Score')
+        plt.title('Scores ' + str(freq) + ' Hz')
+        plt.show()
+
+        plot_name = data_dir + '../plots/scores_' + str(freq) + 'hz.png'
+        fig.savefig(plot_name, dpi=300)

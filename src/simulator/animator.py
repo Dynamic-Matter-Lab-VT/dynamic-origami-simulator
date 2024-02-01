@@ -12,14 +12,16 @@ Filename: animator.py
 import time
 import numpy as np
 import vpython as vp
+import matplotlib.pyplot as plt
 
 show_strain = False
 paused = False
 strain_scale = 20
 time_scale = 1
+cmap = 'jet'
 
 
-def interpolate_color(value):
+def interpolate_color(value, cmap='jet'):
     """
         Interpolates a color between blue and green for values less than or equal to 0.5,
         and between green and red for values greater than 0.5.
@@ -31,16 +33,8 @@ def interpolate_color(value):
             vpython.vector: The interpolated color as a VPython vector.
 
     """
-    blue = vp.vector(0, 0, 1)
-    green = vp.vector(0, 1, 0)
-    red = vp.vector(1, 0, 0)
-    if value <= 0.5:
-        ratio = 2 * value
-        interpolated_color = blue + ratio * (green - blue)
-    else:
-        ratio = 2 * (value - 0.5)
-        interpolated_color = green + ratio * (red - green)
-    return interpolated_color
+    cm = plt.get_cmap(cmap)
+    return vp.vector(*cm(value)[:3])
 
 
 def pause_button_func(p):
@@ -103,7 +97,16 @@ def slider_time_scale(s):
     time_scale = s.value
 
 
+def update_sim_time(t):
+    pass
+
+def cmap_update(m):
+    global cmap
+    cmap = m.selected
+    print(cmap)
+
 def simulate(geom_, solution_):
+    global show_strain, paused, strain_scale, time_scale, pause_button, strain_checkbox, slider1, slider2, text, curr_time, time_slider, geom, cmap
     x_sol = solution_
     params = x_sol.sol
     geom = geom_
@@ -112,22 +115,23 @@ def simulate(geom_, solution_):
     i_max = geom.i_max
     j_max = geom.j_max
 
-    vp.scene.append_to_caption('\n')
+    geom.scene.append_to_caption("""\n""")
+    time_slider = vp.slider(min=0, max=x_sol.t[-1], value=0, bind=update_sim_time, textwrap=True, length=1000)
+    geom.scene.append_to_caption("""\n""")
 
-    # Button to pause the simulation
     pause_button = vp.button(text='Pause', bind=pause_button_func)
-
-    # Checkbox to toggle strain visualization
+    geom.scene.append_to_caption("""\n\n""")
     strain_checkbox = vp.checkbox(text='Show Strain', bind=strain_checkbox_func)
+    # add dropdown list for strain visualization
+    cmap_dropdown = vp.menu(choices=['jet', 'viridis', 'plasma', 'inferno', 'magma'], bind=cmap_update)
+    geom.scene.append_to_caption("""\n\n""")
+    geom.scene.append_to_caption("""strain scale: """)
+    slider1 = vp.slider(min=0, max=strain_scale, value=20, bind=slider_strain_scale, textwrap=True, length=400)
+    geom.scene.append_to_caption("""\n\n""")
+    geom.scene.append_to_caption("""time scale: """)
+    slider2 = vp.slider(min=0, max=10, value=1, bind=slider_time_scale, textwrap=True, length=400)
 
-    # Slider to adjust the strain scale
-    slider1 = vp.slider(min=0, max=50, value=20, bind=slider_strain_scale, textwrap=True, length=400)
-
-    # Slider to adjust the time scale
-    slider2 = vp.slider(min=1, max=10, value=1, bind=slider_time_scale, textwrap=True, length=400)
-
-    # Text display for FPS
-    text = vp.wtext(text='fps: 0')
+    text = vp.wtext(text='fps: ')
 
     # Simulation player loop
     while True:
@@ -137,6 +141,7 @@ def simulate(geom_, solution_):
             t0 = time.time()
             y = x_sol.y[:, sol_t]
             geom.nodes = y[:i_max * j_max * 3].reshape((i_max, j_max, 3))
+            time_slider.value = x_sol.t[sol_t]
 
             if not show_strain:
                 geom.update_vp_nodes([[vp.color.white for j in range(0, j_max)] for i in range(0, i_max)])
@@ -152,7 +157,7 @@ def simulate(geom_, solution_):
 
                 for i in range(0, i_max):
                     for j in range(0, j_max):
-                        colors[i][j] = interpolate_color(strains[i][j])
+                        colors[i][j] = interpolate_color(strains[i][j], cmap)
                 geom.update_vp_nodes(colors=colors)
 
             while time.time() - t0 < dt * time_scale:

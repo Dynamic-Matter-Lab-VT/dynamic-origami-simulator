@@ -57,7 +57,7 @@ class SpringGeometry:
                                x=0,
                                y=0,
                                center=vp.vector(0, 0, 0),
-                               background=vp.color.black, fov=1)
+                               background=vp.color.white, fov=1)
 
     def draw(self):
         for i in range(self.i_max - 1):

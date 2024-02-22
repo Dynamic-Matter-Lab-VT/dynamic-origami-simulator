@@ -8,8 +8,9 @@ if __name__ == '__main__':
     # filename = data_dir + 'SimpleSpring.pkl'
     # filename = data_dir + 'TaperedSpring_0.pkl'
     # filename = data_dir + 'TaperedSpring_50_hz.pkl'
-    freq = str(input())
-    filename = data_dir + 'TaperedSpring_' + freq + 'hz.pkl'
+    # freq = str(input())
+    freq = '8.734_'
+    filename = data_dir + 'TaperedSpring_sq' + freq + 'hz.pkl'
 
     with open(filename, 'rb') as f:
         solution = pickle.load(f)

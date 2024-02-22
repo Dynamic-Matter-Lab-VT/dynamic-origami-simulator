@@ -16,7 +16,9 @@ warnings.simplefilter('ignore', category=NumbaWarning)
 
 def excitation(t):
     global freq
-    return 0.1 * np.sin(2 * np.pi * freq * t)
+    a = 0.2
+    # return a * (np.floor(1 + np.sin(2 * np.pi * freq * t)) - 0.5)
+    return a * np.sin(2 * np.pi * freq * t)
 
 
 @jit(fastmath=True, cache=True)

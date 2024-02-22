@@ -13,10 +13,10 @@ if __name__ == '__main__':
     k_axial = 10000
     k_shear = 500000
 
-    freq = 50
+    freq = 8.734
 
     geom = SpringGeometry(d=d, p=p, n=n, th=th, visualize=False)
 
     data_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/../data/simulations/'
-    filename = data_dir + 'TaperedSpring_' + str(freq) + '_hz.pkl'
+    filename = data_dir + 'TaperedSpring_sq' + str(freq) + '_hz.pkl'
     get_solution(geom, filename, zeta, k_axial, k_shear, 0.01, 30, freq)

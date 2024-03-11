@@ -197,7 +197,7 @@ def calculate_crease_force(nodes, vel, t):
         dth_dxk = (np.dot(r_kl, r_kj) / np.linalg.norm(r_kj) ** 2 - 1) * dth_dxl \
                   - np.dot(r_ij, r_kj) / np.linalg.norm(r_kj) ** 2 * dth_dxi
 
-        f_cr = -k * (th - th0)
+        f_cr = -kwh * (th - th0)
 
         if not node_props[pi[0]][pi[1]][1]:
             force_crease[pi[0]][pi[1]] += f_cr * dth_dxi

@@ -59,11 +59,11 @@ def calculate_internal_force(t):
         if not node_props[i][1]:
             force_axial[i, :] += k_axial * (l - l0) * (x[i + 1, :] - x[i, :]) / l
             force_damping[i, :] += zeta * (x_d[i + 1, :] - x_d[i, :]) / l
-            force_shear[i, :] += k_shear * (r - r0)
+            force_shear[i, :] += k_shear * (i / i_max) ** 2 * (r - r0)
         if not node_props[i + 1][1]:
             force_axial[i + 1, :] -= k_axial * (l - l0) * (x[i + 1, :] - x[i, :]) / l
             force_damping[i + 1, :] -= zeta * (x_d[i + 1, :] - x_d[i, :]) / l
-            force_shear[i + 1, :] += -k_shear * (r - r0)
+            force_shear[i + 1, :] += -k_shear * (i / i_max) ** 2 * (r - r0)
 
 
 def dynamic_model(t, z):

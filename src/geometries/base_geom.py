@@ -36,7 +36,7 @@ class BaseGeometry:
                                x=0,
                                y=0,
                                center=vp.vector(int(self.a * self.i_max / 2), int(self.b * self.j_max / 2), 0),
-                               background=vp.color.black, fov=1)
+                               background=vp.color.white, fov=1)
 
     def update_nodes(self):
         self.fa = (self.a ** 2 + self.b ** 2) ** 0.5

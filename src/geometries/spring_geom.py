@@ -19,6 +19,7 @@ class SpringGeometry:
         self.n = int(n)
         self.visualize = visualize
         self.res = res
+        self.l = 0
 
         self.x = self.get_spring_shape()
 
@@ -44,6 +45,7 @@ class SpringGeometry:
                     self.p / (2 * np.pi)) ** 2) ** 0.5)
         x = np.zeros((self.res, 3))
         x[:, 0], x[:, 1], x[:, 2] = spring_curve(self.d, self.p, self.th, ts)
+        self.l = l
         return x
 
     def create_vp_nodes(self):
@@ -119,4 +121,5 @@ class SpringGeometry:
 
 if __name__ == '__main__':
     spring = SpringGeometry(0.3, 0.06, 10, 10 * np.pi / 180, True)
+    print(spring.l)
     spring.spin()

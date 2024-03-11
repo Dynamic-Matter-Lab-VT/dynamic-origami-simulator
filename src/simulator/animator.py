@@ -100,10 +100,12 @@ def slider_time_scale(s):
 def update_sim_time(t):
     pass
 
+
 def cmap_update(m):
     global cmap
     cmap = m.selected
     print(cmap)
+
 
 def simulate(geom_, solution_):
     global show_strain, paused, strain_scale, time_scale, pause_button, strain_checkbox, slider1, slider2, text, curr_time, time_slider, geom, cmap
@@ -158,6 +160,8 @@ def simulate(geom_, solution_):
                 for i in range(0, i_max):
                     for j in range(0, j_max):
                         colors[i][j] = interpolate_color(strains[i][j], cmap)
+                        # give color according to nodal position
+                        # colors[i][j] = interpolate_color((i * i_max + j) / (i_max * j_max), cmap)
                 geom.update_vp_nodes(colors=colors)
 
             while time.time() - t0 < dt * time_scale:

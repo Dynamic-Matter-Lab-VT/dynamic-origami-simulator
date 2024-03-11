@@ -44,7 +44,7 @@ class SquareTwistGeometry:
         self.scene = vp.canvas(title='Square Twist Simulation', width=1000, height=800,
                                x=0,
                                y=0,
-                               center=vp.vector(0, 0, 0), background=vp.color.black, fov=1)
+                               center=vp.vector(0, 0, 0), background=vp.color.white, fov=1)
 
     def update_nodes(self):
         self.nodes = np.zeros((self.i_max, self.j_max, 3))

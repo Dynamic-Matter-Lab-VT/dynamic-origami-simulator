@@ -83,7 +83,7 @@ class MiuraOriGeometry:
                                x=0,
                                y=0,
                                center=vp.vector(self.l * self.xn, self.w * self.yn, 0),
-                               background=vp.color.black, fov=1)
+                               background=vp.color.white, fov=1)
 
     def update_dimensions(self):
         """Update the dimensions of the Miura-Ori geometry.
@@ -211,13 +211,13 @@ class MiuraOriGeometry:
                                              self.vp_nodes[i + 1][j + 1].pos,
                                              self.vp_nodes[i][j + 1].pos,
                                              self.vp_nodes[i][j].pos],
-                                        color=vp.color.gray(0.5),
+                                        color=vp.color.gray(0.0),
                                         radius=0.01)
                                for j in range(0, self.j_max - 1)] for i in range(0, self.i_max - 1)]
 
         self.facet_curves = [[vp.curve(pos=[self.vp_nodes[i][j + i % 2].pos,
                                             self.vp_nodes[i + 1][j + 1 - i % 2].pos],
-                                       color=vp.color.purple, radius=0.01)
+                                       color=vp.color.black, radius=0.01)
                               for j in range(0, self.j_max - 1)] for i in range(0, self.i_max - 1)]
 
     def update_curves(self):
@@ -309,8 +309,8 @@ if __name__ == '__main__':
     b = 1
     gamma = np.pi / 4
     theta = np.pi / 4
-    xn = 3
-    yn = 3
+    xn = 2
+    yn = 2
 
     geo = MiuraOriGeometry(a, b, gamma, theta, xn, yn, True)
     geo.spin()

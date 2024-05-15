@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import cumtrapz
+import os
 
 terrain_data = None
 velocity_data = None
@@ -34,8 +35,9 @@ def generate_random_terrain():
 
 def load_data():
     global terrain_data, velocity_data, n
-    terrain_data = np.load('terrain_data.npy')
-    velocity_data = np.load('velocity_data.npy')
+    data_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/tapered_spring_tests/'
+    terrain_data = np.load(data_dir + 'terrain_data.npy')
+    velocity_data = np.load(data_dir + 'velocity_data.npy')
     n = len(terrain_data)
 
 
@@ -49,7 +51,13 @@ def get_noisy_velocity(t_):
     global velocity_data
     idxs = np.floor(t_ * 1000).astype(int)
     # add some white noise to the velocity data
-    return velocity_data[idxs] + 0.1 * np.random.randn(len(t_))
+    return velocity_data[idxs] + 0.1 * np.random.random()
+
+
+def get_terrian(t_):
+    global terrain_data
+    idxs = np.floor(t_ * 1000).astype(int)
+    return terrain_data[idxs]
 
 
 if __name__ == "__main__":

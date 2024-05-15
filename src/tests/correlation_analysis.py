@@ -7,7 +7,9 @@ if __name__ == '__main__':
     data_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/../data/simulations/'
     # for freq in [10, 20, 30, 40, 50]:
     freq = 20
-    filename = data_dir + 'TaperedSpring_sq_nl20.0_hz.pkl'
+    # filename = data_dir + 'TaperedSpring_sq_nl20.0_hz.pkl'
+    # filename = data_dir + 'TaperedSpring_lin_terrain_class' + str(10.0) + '_hz.pkl'
+    filename = data_dir + 'TaperedSpring_nlin_terrain_class' + str(10.0) + '_hz.pkl'
 
     with open(filename, 'rb') as f:
         solution = pickle.load(f)

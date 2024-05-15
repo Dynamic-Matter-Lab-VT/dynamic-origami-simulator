@@ -8,6 +8,7 @@ from tqdm import tqdm
 import pickle
 from scipy.optimize import minimize
 import time
+from src.tests.tapered_spring_tests.terrain_shape import *
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
 warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
@@ -15,10 +16,11 @@ warnings.simplefilter('ignore', category=NumbaWarning)
 
 
 def excitation(t):
-    global freq
-    a = 0.2
+    # global freq
+    # a = 0.2
     # return a * (np.floor(1 + np.sin(2 * np.pi * freq * t)) - 0.5)
-    return a * np.sin(2 * np.pi * freq * t)
+    # return a * np.sin(2 * np.pi * freq * t)
+    return get_noisy_velocity(t)
 
 
 @jit(fastmath=True, cache=True)
@@ -60,10 +62,12 @@ def calculate_internal_force(t):
             force_axial[i, :] += k_axial * (l - l0) * (x[i + 1, :] - x[i, :]) / l
             force_damping[i, :] += zeta * (x_d[i + 1, :] - x_d[i, :]) / l
             force_shear[i, :] += k_shear * (i / i_max) ** 2 * (r - r0)
+            # force_shear[i, :] += k_shear * (r - r0)
         if not node_props[i + 1][1]:
             force_axial[i + 1, :] -= k_axial * (l - l0) * (x[i + 1, :] - x[i, :]) / l
             force_damping[i + 1, :] -= zeta * (x_d[i + 1, :] - x_d[i, :]) / l
             force_shear[i + 1, :] += -k_shear * (i / i_max) ** 2 * (r - r0)
+            # force_shear[i + 1, :] -= k_shear * (r - r0)
 
 
 def dynamic_model(t, z):
@@ -102,7 +106,7 @@ def get_optimal_initial_conditions(z0_):
 
 
 def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=30, k_axial_=10000, k_shear_=10000, dt_=0.01, t_max_=30,
-                 freq_=10):
+                 freq_=10, aux_func=None):
     global geom, zeta, k_axial, k_shear, dt, x, x0, i_max, force_external, force_axial, force_shear, force_damping, \
         node_props, t_sim, computation_progress, pbar, z0, t_max, filename, n, freq
 
@@ -133,6 +137,8 @@ def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=30, k_axial_=10000, 
     computation_progress = 0
     pbar = None
 
+    # create function from aux_func to be used as excitation function
+    load_data()
     z0 = np.concatenate((x0.flatten(), np.zeros((i_max, 3)).flatten()))
     # z0 = get_optimal_initial_conditions(z0)
 

@@ -33,7 +33,8 @@ def get_corelation_estimates(res_freq, freq):
 if __name__ == "__main__":
     data_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/../data/simulations/'
     # filename = data_dir + 'SimpleSpring.pkl'
-    filename = data_dir + 'TaperedSpring_sq_nl20.0_hz.pkl'
+    # filename = data_dir + 'TaperedSpring_lin_terrain_class' + str(10.0) + '_hz.pkl'
+    filename = data_dir + 'TaperedSpring_nlin_terrain_class' + str(10.0) + '_hz.pkl'
     # freq = str(input())
     # freq = '20_'
     # filename = data_dir + 'TaperedSpring_sq' + freq + 'hz.pkl'
@@ -46,9 +47,10 @@ if __name__ == "__main__":
 
     x = np.zeros((i_max, 3, t.shape[0]))
     for i in range(0, t.shape[0]):
-        x[:, :, i] = solution.y[:i_max * 3, i].reshape((i_max, 3)) - solution.y[0:i_max * 3, 0].reshape((i_max, 3))
+        x[:, :, i] = solution.y[:i_max * 3, i].reshape((i_max, 3)) - solution.y[0:i_max * 3, 2].reshape((i_max, 3))
 
-    test_n = 0
+    x[:, 2, :] = x[:, 2, :] - x[0, 2, :]
+    test_n = 5
 
     plt.figure()
     plt.plot(t, x[test_n, 2, :])

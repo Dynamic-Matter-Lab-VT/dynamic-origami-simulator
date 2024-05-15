@@ -58,6 +58,7 @@ def get_terrian(t_):
     global terrain_data
     idxs = np.floor(t_ * 1000).astype(int)
     return terrain_data[idxs]
+    # return 0
 
 
 if __name__ == "__main__":

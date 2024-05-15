@@ -34,7 +34,8 @@ if __name__ == "__main__":
     data_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/../data/simulations/'
     # filename = data_dir + 'SimpleSpring.pkl'
     # filename = data_dir + 'TaperedSpring_lin_terrain_class' + str(10.0) + '_hz.pkl'
-    filename = data_dir + 'TaperedSpring_nlin_terrain_class' + str(10.0) + '_hz.pkl'
+    # filename = data_dir + 'TaperedSpring_nlin_terrain_class' + str(10.0) + '_hz.pkl'
+    filename = data_dir + 'TaperedSpring_linearity_test.pkl'
     # freq = str(input())
     # freq = '20_'
     # filename = data_dir + 'TaperedSpring_sq' + freq + 'hz.pkl'
@@ -50,7 +51,7 @@ if __name__ == "__main__":
         x[:, :, i] = solution.y[:i_max * 3, i].reshape((i_max, 3)) - solution.y[0:i_max * 3, 2].reshape((i_max, 3))
 
     x[:, 2, :] = x[:, 2, :] - x[0, 2, :]
-    test_n = 5
+    test_n = 99
 
     plt.figure()
     plt.plot(t, x[test_n, 2, :])
@@ -79,6 +80,15 @@ if __name__ == "__main__":
     plt.colorbar()
     plt.xlabel('time')
     plt.ylabel('displacement')
+    plt.title('Displacement vs Time')
+    plt.show()
+
+    # show displacement of last node
+    plt.figure()
+    for i in range(x.shape[0]):
+        plt.plot(t, x[i, 2, :])
+    plt.xlabel('Time')
+    plt.ylabel('Displacement')
     plt.title('Displacement vs Time')
     plt.show()
 

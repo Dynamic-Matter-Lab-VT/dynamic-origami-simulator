@@ -16,11 +16,12 @@ warnings.simplefilter('ignore', category=NumbaWarning)
 
 
 def excitation(t):
-    # global freq
-    # a = 0.2
+    global freq
+    a = 0.2
     # return a * (np.floor(1 + np.sin(2 * np.pi * freq * t)) - 0.5)
     # return a * np.sin(2 * np.pi * freq * t)
-    return get_noisy_velocity(t)
+    return get_velocity(t)
+    # return get_terrian(t)
 
 
 @jit(fastmath=True, cache=True)
@@ -42,12 +43,15 @@ def initialize_forces():
 
 @jit(fastmath=True, cache=True)
 def calculate_external_force(t):
-    global force_external, node_props, i_max, x, x_d
+    global force_external, node_props, i_max, x, x0, x_d
+    force_external[i_max-1, :] = np.array([0, 0, -100.0 * t])
     for i in range(i_max):
         # if not node_props[i][1]:
         #     force_external[i, :] = np.array([0, 0, -9.81 * node_props[i][0]])
         if node_props[i][1]:
-            x_d[i, :] = np.array([0, 0, excitation(t)])
+            # x_d[i, :] = np.array([0, 0, excitation(t)])
+            # x[i, :] = x0[i, :] + np.array([0, 0, excitation(t)])
+            pass
 
 
 @jit(fastmath=True, cache=True)

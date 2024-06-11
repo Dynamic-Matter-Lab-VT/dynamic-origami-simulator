@@ -120,6 +120,6 @@ class SpringGeometry:
 
 
 if __name__ == '__main__':
-    spring = SpringGeometry(0.3, 0.06, 10, 10 * np.pi / 180, True)
+    spring = SpringGeometry(0.3, 0.03, 10, 10 * np.pi / 180, True)
     print(spring.l)
     spring.spin()

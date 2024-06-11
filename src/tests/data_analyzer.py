@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import pickle
 import os
@@ -35,7 +36,10 @@ if __name__ == "__main__":
     # filename = data_dir + 'SimpleSpring.pkl'
     # filename = data_dir + 'TaperedSpring_lin_terrain_class' + str(10.0) + '_hz.pkl'
     # filename = data_dir + 'TaperedSpring_nlin_terrain_class' + str(10.0) + '_hz.pkl'
-    filename = data_dir + 'TaperedSpring_linearity_test.pkl'
+    # filename = data_dir + 'TaperedSpring_linearity_test.pkl'
+    # filename = data_dir + 'TaperedSpring_freq_analysis.pkl'
+    # filename = data_dir + 'CylinderSpring_impulse_response.pkl'
+    filename = data_dir + 'CylinderSpring_cubic_nonlinear.pkl'
     # freq = str(input())
     # freq = '20_'
     # filename = data_dir + 'TaperedSpring_sq' + freq + 'hz.pkl'
@@ -75,16 +79,26 @@ if __name__ == "__main__":
     plt.title('FFT of Displacement')
     plt.show()
 
-    plt.figure()
-    plt.imshow(x[:, 2, :], aspect='auto', cmap='jet')
-    plt.colorbar()
-    plt.xlabel('time')
-    plt.ylabel('displacement')
-    plt.title('Displacement vs Time')
+    # plot same fft in 3D
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    x_ = np.arange(X.shape[1])
+    y_ = np.arange(X.shape[0])
+    X_, Y_ = np.meshgrid(x_, y_)
+    ax.plot_surface(X_, Y_, X, cmap='viridis')
     plt.show()
+
+    # plt.figure()
+    # plt.imshow(x[:, 2, :], aspect='auto', cmap='jet')
+    # plt.colorbar()
+    # plt.xlabel('time')
+    # plt.ylabel('displacement')
+    # plt.title('Displacement vs Time')
+    # plt.show()
 
     # show displacement of last node
     plt.figure()
+    print(x.shape)
     for i in range(x.shape[0]):
         plt.plot(t, x[i, 2, :])
     plt.xlabel('Time')

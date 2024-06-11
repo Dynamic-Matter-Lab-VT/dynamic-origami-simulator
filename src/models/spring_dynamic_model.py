@@ -19,8 +19,8 @@ def excitation(t):
     global freq
     a = 0.2
     # return a * (np.floor(1 + np.sin(2 * np.pi * freq * t)) - 0.5)
-    # return a * np.sin(2 * np.pi * freq * t)
-    return get_velocity(t)
+    return a * np.sin(2 * np.pi * freq * t)
+    # return get_velocity(t)
     # return get_terrian(t)
 
 
@@ -44,14 +44,14 @@ def initialize_forces():
 @jit(fastmath=True, cache=True)
 def calculate_external_force(t):
     global force_external, node_props, i_max, x, x0, x_d
-    force_external[i_max-1, :] = np.array([0, 0, -100.0 * t])
-    for i in range(i_max):
-        # if not node_props[i][1]:
-        #     force_external[i, :] = np.array([0, 0, -9.81 * node_props[i][0]])
-        if node_props[i][1]:
-            # x_d[i, :] = np.array([0, 0, excitation(t)])
-            # x[i, :] = x0[i, :] + np.array([0, 0, excitation(t)])
-            pass
+    force_external[i_max-1, :] = np.array([0, 0, -0.2 * t])
+    # for i in range(i_max):
+    #     # if not node_props[i][1]:
+    #     #     force_external[i, :] = np.array([0, 0, -9.81 * node_props[i][0]])
+    #     if node_props[i][1]:
+    #         x_d[i, :] = np.array([0, 0, excitation(t)])
+    #         # x[i, :] = x0[i, :] + np.array([0, 0, excitation(t)])
+    #         pass
 
 
 @jit(fastmath=True, cache=True)
@@ -65,13 +65,15 @@ def calculate_internal_force(t):
         if not node_props[i][1]:
             force_axial[i, :] += k_axial * (l - l0) * (x[i + 1, :] - x[i, :]) / l
             force_damping[i, :] += zeta * (x_d[i + 1, :] - x_d[i, :]) / l
-            force_shear[i, :] += k_shear * (i / i_max) ** 2 * (r - r0)
+            # force_shear[i, :] += k_shear * (i / i_max) ** 2 * (r - r0)
             # force_shear[i, :] += k_shear * (r - r0)
+            force_shear[i, :] += k_shear * (r - r0) + k_shear / 3 * (r - r0) ** 3
         if not node_props[i + 1][1]:
             force_axial[i + 1, :] -= k_axial * (l - l0) * (x[i + 1, :] - x[i, :]) / l
             force_damping[i + 1, :] -= zeta * (x_d[i + 1, :] - x_d[i, :]) / l
-            force_shear[i + 1, :] += -k_shear * (i / i_max) ** 2 * (r - r0)
+            # force_shear[i + 1, :] += -k_shear * (i / i_max) ** 2 * (r - r0)
             # force_shear[i + 1, :] -= k_shear * (r - r0)
+            force_shear[i + 1, :] -= k_shear * (r - r0) + k_shear / 3 * (r - r0) ** 3
 
 
 def dynamic_model(t, z):

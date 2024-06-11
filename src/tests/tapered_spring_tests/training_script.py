@@ -7,10 +7,13 @@ import tensorflow as tf
 if __name__ == "__main__":
     tf.autograph.set_verbosity(3)
     data_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/../../data/simulations/'
-    filename = data_dir + 'TaperedSpring_lin_terrain_class' + str(10.0) + '_hz.pkl'
+    # filename = data_dir + 'TaperedSpring_lin_terrain_class' + str(10.0) + '_hz.pkl'
     # filename = data_dir + 'TaperedSpring_nlin_terrain_class' + str(10.0) + '_hz.pkl'
+    # filename = data_dir + 'TaperedSpring_freq_analysis.pkl'
+    filename = data_dir + 'CylinderSpring_impulse_response.pkl'
 
-    retrain = False
+    retrain = True
+    validate = True
 
     with open(filename, 'rb') as f:
         solution = pickle.load(f)
@@ -59,8 +62,8 @@ if __name__ == "__main__":
     y_train = data
 
     if retrain:
-        weights = np.load('learned_weights_nl.npy')
-        biases = np.load('learned_biases_nl.npy')
+        weights = np.load('learned_weights_l.npy')
+        biases = np.load('learned_biases_l.npy')
         model = tf.keras.models.Sequential()
         model.add(tf.keras.layers.Dense(1, input_shape=(x_train.shape[1],)))
         model.layers[0].set_weights([weights, biases])
@@ -71,28 +74,54 @@ if __name__ == "__main__":
         model.compile(optimizer='adam', loss='mean_squared_error')
         model.summary()
 
-    print(x_train.shape, y_train.shape)
-    history = model.fit(x_train, y_train, epochs=2000, verbose=1, batch_size=50)
+    if validate:
+        plt.figure()
+        plt.plot(t, model.predict(x_train))
+        plt.plot(t, data)
+        plt.xlabel('Time')
+        plt.ylabel('Terrain')
+        plt.title('Learned Terrain vs Time (Validation)')
+        plt.legend(['Predicted', 'Actual'])
+        plt.show()
 
-    # save the weights and biases
-    learned_weights, learned_biases = model.layers[0].get_weights()
-    # save
-    np.save('learned_weights_l.npy', learned_weights)
-    np.save('learned_biases_l.npy', learned_biases)
+        # plot weights and biases
+        plt.figure()
+        plt.plot(weights)
+        plt.xlabel('Index')
+        plt.ylabel('Value')
+        plt.title('Weights')
+        plt.show()
 
-    # plot the loss
-    plt.figure()
-    plt.plot(history.history['loss'])
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Loss vs Epoch')
-    plt.show()
+        plt.figure()
+        plt.plot(biases)
+        plt.xlabel('Index')
+        plt.ylabel('Value')
+        plt.title('Biases')
+        plt.show()
+    else:
+        print(x_train.shape, y_train.shape)
+        history = model.fit(x_train, y_train, epochs=2000, verbose=1, batch_size=50)
 
-    # plot the learned terrain
-    plt.figure()
-    plt.plot(t, model.predict(x_train))
-    plt.plot(t, data)
-    plt.xlabel('Time')
-    plt.ylabel('Terrain')
-    plt.title('Learned Terrain vs Time')
-    plt.show()
+        # save the weights and biases
+        learned_weights, learned_biases = model.layers[0].get_weights()
+        # save
+        np.save('learned_weights_l.npy', learned_weights)
+        np.save('learned_biases_l.npy', learned_biases)
+
+        # plot the loss
+        plt.figure()
+        plt.plot(history.history['loss'])
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Loss vs Epoch')
+        plt.show()
+
+        # plot the learned terrain
+        plt.figure()
+        plt.plot(t, model.predict(x_train))
+        plt.plot(t, data)
+        plt.xlabel('Time')
+        plt.ylabel('Terrain')
+        plt.title('Learned Terrain vs Time (Training)')
+        plt.legend(['Predicted', 'Actual'])
+        plt.show()

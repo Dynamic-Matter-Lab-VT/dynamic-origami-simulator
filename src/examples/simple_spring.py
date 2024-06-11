@@ -11,7 +11,10 @@ if __name__ == '__main__':
     # filename = data_dir + 'TaperedSpring_sq_nl20.0_hz.pkl'
     # filename = data_dir + 'TaperedSpring_lin_terrain_class' + str(10.0) + '_hz.pkl'
     # filename = data_dir + 'TaperedSpring_nlin_terrain_class' + str(10.0) + '_hz.pkl'
-    filename = data_dir + 'TaperedSpring_linearity_test.pkl'
+    # filename = data_dir + 'TaperedSpring_linearity_test.pkl'
+    # filename = data_dir + 'TaperedSpring_freq_analysis.pkl'
+    # filename = data_dir + 'CylinderSpring_impulse_response.pkl'
+    filename = data_dir + 'CylinderSpring_cubic_nonlinear.pkl'
     # freq = str(input())
     # freq = '8.734_'
     # # freq = '_10_'

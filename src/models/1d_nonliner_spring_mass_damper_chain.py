@@ -3,10 +3,10 @@ from scipy.integrate import solve_ivp
 import pickle
 import matplotlib.pyplot as plt
 
-n =10
-ks = np.ones(n) * 10
+n = 10
+ks = np.ones(n) * 2
 ms = np.ones(n) * 1
-bs = np.ones(n) * 0.5
+bs = np.ones(n) * 0.005
 x0 = np.zeros(n)
 
 
@@ -20,28 +20,42 @@ def f(t, y):
     # spring force + damping force + excitation force
 
     def f_s(k, dx):
-        return k * dx - 110.0 * k * dx ** 3
+        return k * dx + 1.0 * dx ** 3
+        # return k * np.sin(dx) / 50
 
     def f_d(b, dv):
         return b * dv
+        # return 0
 
     def f_e(t_):
-        return 10.0 * np.sin(10 * np.pi * t_)
+        # if t_ < 10:
+        #     # return t_
+        #     return 10.0
+        # else:
+        #     return 0
+        # return 10.0 * np.sin(10 * np.pi * t_)
+        return 100.0
 
-    a[0] = (-f_s(ks[0], x[0]) + f_s(ks[1], x[1] - x[0])  # spring force
-            - f_d(bs[0], v[0]) + f_d(bs[1], v[1] - v[0])  # damping force
-            + f_e(t)) / ms[0]  # excitation force
+    if n == 1:
+        a[0] = (-f_s(ks[0], x[0])  # spring force
+                - f_d(bs[0], v[0])  # damping force
+                + f_e(t)) / ms[0]  # excitation force
+    else:
+        a[0] = (-f_s(ks[0], x[0]) + f_s(ks[1], x[1] - x[0])  # spring force
+                - f_d(bs[0], v[0]) + f_d(bs[1], v[1] - v[0])  # damping force
+                + f_e(t)) / ms[0]  # excitation force
 
-    # v[0] = 2.0 * np.sin(10 * np.pi * t)
+        # v[0] = 2.0 * np.sin(10 * np.pi * t)
 
-    for i in range(1, n - 1):
-        a[i] = (-f_s(ks[i - 1], x[i] - x[i - 1]) + f_s(ks[i], x[i + 1] - x[i])  # spring force
-                - f_d(bs[i - 1], v[i] - v[i - 1]) + f_d(bs[i], v[i + 1] - v[i])  # damping force
-                + 0) / ms[i]
+        for i in range(1, n - 1):
+            a[i] = (-f_s(ks[i - 1], x[i] - x[i - 1]) + f_s(ks[i], x[i + 1] - x[i])  # spring force
+                    - f_d(bs[i - 1], v[i] - v[i - 1]) + f_d(bs[i], v[i + 1] - v[i])  # damping force
+                    + 0) / ms[i]
 
-    a[-1] = (-f_s(ks[-2], x[-1] - x[-2])  # spring force
-             - f_d(bs[-2], v[-1] - v[-2])  # damping force
-             + 0) / ms[-1]  # excitation force
+        a[-1] = (-f_s(ks[-2], x[-1] - x[-2])  # spring force
+                 - f_d(bs[-2], v[-1] - v[-2])  # damping force
+                 + 0) / ms[-1]  # excitation force
+
     return np.concatenate([v, a])
 
 
@@ -83,6 +97,7 @@ def animate(sol):
         plt.pause(0.001)
         plt.clf()
 
+
 def fourier_analysis(sol):
     t = sol.t
     x = sol.y[:n].T
@@ -91,20 +106,22 @@ def fourier_analysis(sol):
     X = np.abs(X)
     X = X[0:int(X.shape[0] / 2)]
     plt.figure()
-    plt.plot(X)
+    plt.plot(X[2:, :])
     plt.xlabel('Frequency')
     plt.ylabel('Magnitude')
     plt.title('Frequency Domain Analysis')
     plt.show()
 
-t = np.linspace(0, 60, 1000)
-y0 = np.concatenate([x0, np.zeros(n)])
-solution = solve_ivp(f, (0, t[-1]), y0, t_eval=t)
 
-x = solution.y[:n].T
-plt.plot(solution.t, x)
-plt.show()
+if __name__ == '__main__':
+    t = np.linspace(0, 60, 1000)
+    y0 = np.concatenate([x0, np.zeros(n)])
+    solution = solve_ivp(f, (0, t[-1]), y0, t_eval=t)
 
-# animate(solution)
-# get_fd_curve(solution)
-fourier_analysis(solution)
+    x = solution.y[:n].T
+    plt.plot(solution.t, x)
+    plt.show()
+
+    # animate(solution)
+    # get_fd_curve(solution)
+    fourier_analysis(solution)

@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import pickle
 import matplotlib.pyplot as plt
-from benchmark_utils import input_func, narma
+from benchmark_utils import input_func
 import os
 from tqdm import tqdm
 
@@ -11,11 +11,13 @@ data_dir = os.path.dirname(
 
 
 def experiment(n):
-    ks = np.ones(n) * 1
+    ks = np.ones(n) * 1000000.0
     ms = np.ones(n) * 1
     bs = np.ones(n) * 0.005
-    x0 = np.zeros(n)
+    x0 = np.linspace(0, n - 1, n)
+    dt = 0.01
 
+    # @jit(nopython=True)
     def f(t, y):
         x = y[:n]
         v = y[n:]
@@ -26,7 +28,9 @@ def experiment(n):
         # spring force + damping force + excitation force
 
         def f_s(k, dx):
-            return k * dx
+            # return k * dx
+            # return k * dx + 10000 * k * dx ** 3 + 100000 * k * dx ** 5
+            return k * ((dx - 1) / 1.0) ** 5
             # return k * np.sin(dx) / 50
 
         def f_d(b, dv):
@@ -43,14 +47,18 @@ def experiment(n):
             # return 100.0
             return input_func(t_)
 
+        v[0] = (-f_e(t - 2 * dt) + 8 * f_e(t - dt) - 8 * f_e(t + dt) + f_e(t + 2 * dt)) / (12 * dt)
         if n == 1:
+
             a[0] = (-f_s(ks[0], x[0])  # spring force
                     - f_d(bs[0], v[0])  # damping force
-                    + f_e(t)) / ms[0]  # excitation force
+                    # + f_e(t)) / ms[0]  # excitation force
+                    + 0) / ms[0]
         else:
             a[0] = (-f_s(ks[0], x[0]) + f_s(ks[1], x[1] - x[0])  # spring force
                     - f_d(bs[0], v[0]) + f_d(bs[1], v[1] - v[0])  # damping force
-                    + f_e(t)) / ms[0]  # excitation force
+                    # + f_e(t)) / ms[0]  # excitation force
+                    + 0) / ms[0]
 
             # v[0] = 2.0 * np.sin(10 * np.pi * t)
 
@@ -66,9 +74,19 @@ def experiment(n):
         return np.concatenate([v, a])
 
     def save_solution(sol):
-        # make a datastructure to save the solution
-        data = {'t': sol.t, 'y': sol.y, 'n': n, 'ks': ks, 'ms': ms, 'bs': bs, 'ip': input_func(sol.t)}
-        filename = data_dir + 'linear_%d.pkl' % n
+        sol_y = sol.y[:n]
+        # subtract the initial condition
+        sol_y = sol_y - sol_y[:, 0].reshape(-1, 1)
+        # sol_y = sol_y[1:]
+
+        data = {'t': sol.t,
+                'y': sol_y,
+                'n': n,
+                'ks': ks,
+                'ms': ms,
+                'bs': bs,
+                'ip': input_func(sol.t)}
+        filename = data_dir + 'quintic_%d.pkl' % n
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
@@ -76,20 +94,6 @@ def experiment(n):
     y0 = np.concatenate([x0, np.zeros(n)])
     solution = solve_ivp(f, (0, t[-1]), y0, t_eval=t)
     save_solution(solution)
-
-
-def linear_regression(num_input, data, target):
-    weights = np.zeros(num_input)
-    biases = 0
-    error = 0
-
-    for i in range(len(data)):
-        y = np.dot(weights, data[i]) + biases
-        error += (y - target[i]) ** 2
-        weights += 0.01 * (target[i] - y) * data[i]
-        biases += 0.01 * (target[i] - y)
-
-    return weights, biases, error
 
 
 def fourier_analysis(t, y, n):
@@ -128,23 +132,23 @@ def animate(t, y, n):
     plt.ioff()
 
 
-def plot(t, y, n):
+def plot(t, y, n, filename='test'):
     x = y[:n].T
-    plt.figure()
+    plt.figure(filename)
     for i in range(n):
         plt.plot(t, x[:, i], c=plt.cm.jet(i / n))
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':
-    num_exp = 100
-    bar = tqdm(total=num_exp)
-    for n in range(1, num_exp + 1):
-        experiment(n)
-        bar.update(1)
+    # num_exp = 100
+    # bar = tqdm(total=num_exp)
+    # for n in range(1, num_exp + 1):
+    #     experiment(n)
+    #     bar.update(1)
 
     # read solution example
-    with open(data_dir + 'linear_100.pkl', 'rb') as f:
+    with open(data_dir + 'quintic_100.pkl', 'rb') as f:
         data = pickle.load(f)
 
     t = data['t']
@@ -152,18 +156,9 @@ if __name__ == '__main__':
     n = data['n']
     ip = data['ip']
 
-    plt.plot(t, ip)
-    plot(t, y, n)
+    # plt.plot(t, ip)
+    plot(t, y, n, 'quintic')
     # animate(t, y, n)
-    fourier_analysis(t, y, n)
+    # fourier_analysis(t, y, n)
 
-    # t = np.linspace(0, 60, 1000)
-    #
-    # n = 10
-    # alpha = 0.5
-    # beta = 0.02
-    # gamma = 0.1
-    # delta = 0.1
-    # y, x = narma(n, 1000, alpha, beta, gamma, delta)
-    # plt.plot(t, y)
-    # plt.show()
+    plt.show()

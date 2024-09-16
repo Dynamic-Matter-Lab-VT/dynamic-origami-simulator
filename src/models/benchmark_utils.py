@@ -86,7 +86,7 @@ def input_func(t):
 
 def narma(n, dim, alpha=0.3, beta=0.04, gamma=1.5, delta=0.01):
     m = 2 * n + dim
-    t = np.linspace(0, 5, m)
+    t = np.linspace(0, 100, m)
     input_data = input_func(t)
 
     x = np.zeros(m)

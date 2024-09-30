@@ -11,9 +11,9 @@ data_dir = os.path.dirname(
 
 
 def experiment(n):
-    ks = np.ones(n) * 1000000.0
+    ks = np.ones(n) * 1.0
     ms = np.ones(n) * 1
-    bs = np.ones(n) * 0.005
+    bs = np.ones(n) * 0.0
     x0 = np.linspace(0, n - 1, n)
     dt = 0.01
 
@@ -28,9 +28,9 @@ def experiment(n):
         # spring force + damping force + excitation force
 
         def f_s(k, dx):
-            # return k * dx
+            return k * dx
             # return k * dx + 10000 * k * dx ** 3 + 100000 * k * dx ** 5
-            return k * ((dx - 1) / 1.0) ** 5
+            # return k * ((dx - 1) / 1.0) ** 5
             # return k * np.sin(dx) / 50
 
         def f_d(b, dv):
@@ -86,7 +86,8 @@ def experiment(n):
                 'ms': ms,
                 'bs': bs,
                 'ip': input_func(sol.t)}
-        filename = data_dir + 'quintic_%d.pkl' % n
+        # filename = data_dir + 'quintic_%d.pkl' % n
+        filename = data_dir + 'pure_sine_%d.pkl' % n
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
@@ -141,6 +142,7 @@ def plot(t, y, n, filename='test'):
 
 
 if __name__ == '__main__':
+    experiment(5)
     # num_exp = 100
     # bar = tqdm(total=num_exp)
     # for n in range(1, num_exp + 1):

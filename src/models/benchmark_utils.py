@@ -78,10 +78,11 @@ def xor(sequence_length=1000, n_sequence=1, memory_delay=1, random_state=None):
 #     return np.tanh(input_data), np.tanh(y)
 
 def input_func(t):
-    f1 = 2.11
-    f2 = 3.73
-    f3 = 4.33
-    return 0.2 * np.sin(2 * np.pi * f1 * t) * np.sin(2 * np.pi * f2 * t) * np.sin(2 * np.pi * f3 * t)
+    # f1 = 2.11
+    # f2 = 3.73
+    # f3 = 4.33
+    # return 0.2 * np.sin(2 * np.pi * f1 * t) * np.sin(2 * np.pi * f2 * t) * np.sin(2 * np.pi * f3 * t)
+    return 0.3 * np.sin(2 * np.pi * 1 * t)
 
 
 def narma(n, dim, alpha=0.3, beta=0.04, gamma=1.5, delta=0.01):

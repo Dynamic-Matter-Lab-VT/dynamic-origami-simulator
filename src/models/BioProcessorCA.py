@@ -119,10 +119,10 @@ class BioGrid:
         for i in prange(self.nodes.shape[0]):
             for j in prange(self.nodes.shape[1]):
                 if (i % 2 + j % 2) == 0:
-                    # cv2.circle(self.canvas, (int(self.nodes[i, j][0]), int(self.nodes[i, j][1])), 5, (0, 0, 0), -1)
+                    cv2.circle(self.canvas, (int(self.nodes[i, j][0]), int(self.nodes[i, j][1])), 5, (0, 0, 0), -1)
                     pass
                 elif (i % 2 + j % 2) == 1:
-                    # cv2.circle(self.canvas, (int(self.nodes[i, j][0]), int(self.nodes[i, j][1])), 5, (0, 0, 255), -1)
+                    cv2.circle(self.canvas, (int(self.nodes[i, j][0]), int(self.nodes[i, j][1])), 5, (0, 0, 255), -1)
                     pass
                 else:
                     if self.cells[(i - 1) // 2, (j - 1) // 2] == 1:

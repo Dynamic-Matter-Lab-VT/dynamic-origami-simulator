@@ -48,24 +48,25 @@ class BioGrid:
         self.acceleration = np.zeros_like(self.nodes)
         for bar in self.bars:
             p0, p1, l0 = bar
-            f = (l0 * self.l - np.linalg.norm(self.nodes[p0[0], p0[1]] - self.nodes[p1[0], p1[1]])) * 1500
+            f = (l0 * self.l - np.linalg.norm(self.nodes[p0[0], p0[1]] - self.nodes[p1[0], p1[1]])) * 50000.0
 
             self.acceleration[p0[0], p0[1]] += f * (
                     self.nodes[p0[0], p0[1]] - self.nodes[p1[0], p1[1]]) / np.linalg.norm(
                 self.nodes[p0[0], p0[1]] - self.nodes[p1[0], p1[1]])
             # apply damping
-            self.acceleration[p0[0], p0[1]] += -2.5 * self.velocity[p0[0], p0[1]]
+            self.acceleration[p0[0], p0[1]] += -50.0 * self.velocity[p0[0], p0[1]]
             self.acceleration[p1[0], p1[1]] -= f * (
                     self.nodes[p0[0], p0[1]] - self.nodes[p1[0], p1[1]]) / np.linalg.norm(
                 self.nodes[p0[0], p0[1]] - self.nodes[p1[0], p1[1]])
             # apply damping
-            self.acceleration[p1[0], p1[1]] += -2.5 * self.velocity[p1[0], p1[1]]
+            self.acceleration[p1[0], p1[1]] += -50.0 * self.velocity[p1[0], p1[1]]
 
         # self.acceleration += -2 * self.velocity
 
         self.acceleration[self.fixed] = 0
 
     def init_bars(self):
+        self.bars = []
         for i in prange(self.nodes.shape[0]):
             for j in prange(self.nodes.shape[1]):
                 if (i % 2 + j % 2) == 2:
@@ -142,7 +143,10 @@ class BioGrid:
             self.nodes[0][-1] += 1 * np.array([-1, 1])
             self.nodes[-1][0] += 1 * np.array([1, -1])
             self.nodes[-1][-1] += 1 * np.array([1, 1])
-        pass
+
+        if self.t - self.t // 1 > 0.99:
+            self.init_cells()
+            self.init_bars()
 
     def get_total_energy(self):
         energy = 0
@@ -169,7 +173,7 @@ class BioGrid:
 
 
 if __name__ == '__main__':
-    bg = BioGrid(10, 10)
+    bg = BioGrid(4, 4)
     bg.init_nodes()
     bg.draw()
     bg.spin()

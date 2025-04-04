@@ -16,7 +16,7 @@ from scipy.integrate import solve_ivp
 from numba import jit, prange
 from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning, NumbaWarning
 import warnings
-from src.geometries.bistable_material_geom import BistableMaterialGeometry
+from src.geometries.live_origami_geom import LiveOrigamiFoldGeometry
 from tqdm import tqdm
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
@@ -73,10 +73,12 @@ def update_node_properties():
 
     """
     global node_props, i_max, j_max
-    node_props[i_max // 2][j_max // 2][1] = True
-    node_props[i_max // 2][j_max // 2 - 1][1] = True
-    node_props[i_max // 2 - 1][j_max // 2][1] = True
-    node_props[i_max // 2 - 1][j_max // 2 - 1][1] = True
+    # node_props[i_max // 2][j_max // 2][1] = True
+    # node_props[i_max // 2][j_max // 2 - 1][1] = True
+    # node_props[i_max // 2 - 1][j_max // 2][1] = True
+    # node_props[i_max // 2 - 1][j_max // 2 - 1][1] = True
+    node_props[i_max // 2][0][1] = True
+    node_props[i_max // 2][j_max - 1][1] = True
 
 
 def initialize_forces():
@@ -105,17 +107,24 @@ def calculate_external_force(nodes, vel, t):
 
     """
     global i_max, j_max, node_props, force_external
-    if 0.0 < t < 0.5:
-        for i in range(i_max):
-            force_external[i][0] = np.array([0.0, 0.0, 0.2])
-            force_external[i][j_max - 1] = np.array([0.0, 0.0, 0.2])
-    elif 5.5 < t < 6.5:
+    # if 0.0 < t < 0.5:
+    #     for i in range(i_max):
+    #         force_external[i][0] = np.array([0.0, 0.0, 0.2])
+    #         force_external[i][j_max - 1] = np.array([0.0, 0.0, 0.2])
+    # elif 5.5 < t < 6.5:
+    #     for j in range(j_max):
+    #         force_external[0][j] = np.array([0.0, 0.0, -0.2])
+    #         force_external[i_max - 1][j] = np.array([0.0, 0.0, -0.2])
+    # else:
+    #     for i in range(i_max):
+    #         for j in prange(j_max):
+    #             force_external[i][j] = np.array([0.0, 0.0, 0.0])
+
+    for i in range(i_max):
         for j in range(j_max):
-            force_external[0][j] = np.array([0.0, 0.0, -0.2])
-            force_external[i_max - 1][j] = np.array([0.0, 0.0, -0.2])
-    else:
-        for i in range(i_max):
-            for j in prange(j_max):
+            if node_props[i][j][1]:
+                force_external[i][j] = np.array([0.0, 0.0, 0.0])
+            else:
                 force_external[i][j] = np.array([0.0, 0.0, 0.0])
 
 
@@ -198,72 +207,6 @@ def calculate_crease_force(nodes, vel, t):
         if not node_props[pl[0]][pl[1]][1]:
             force_crease[pl[0]][pl[1]] += f_cr * dth_dxl
 
-    for i in prange(len(vhinges)):
-        vhinge = vhinges[i]
-        hhinge = hhinges[i]
-
-        [pjv, pkv, piv, plv, th0v, l0v, typv] = vhinge
-        [pjh, pkh, pih, plh, th0h, l0h, typh] = hhinge
-
-        r_ijv = get_vector(piv, pjv, nodes)
-        r_kjv = get_vector(pkv, pjv, nodes)
-        r_klv = get_vector(pkv, plv, nodes)
-
-        r_ijh = get_vector(pih, pjh, nodes)
-        r_kjh = get_vector(pkh, pjh, nodes)
-        r_klh = get_vector(pkh, plh, nodes)
-
-        mv = np.cross(r_ijv, r_kjv)
-        nv = np.cross(r_kjv, r_klv)
-
-        mh = np.cross(r_ijh, r_kjh)
-        nh = np.cross(r_kjh, r_klh)
-
-        thv = get_angle(mv, nv, r_klv)
-        thh = get_angle(mh, nh, r_klh)
-
-        if thh <= th0h:
-            f_crh = -k_fold * l0h * (thv - th0v) ** 2 * (thh - th0h)
-        elif thh > th0h:
-            f_crh = -k_fold * l0h * (thv - th0v) ** 2 * (thh - th0h) * 100
-
-        if thv <= th0v:
-            f_crv = -k_fold * l0v * (thh - th0h) ** 2 * (thv - th0v)
-        elif thv > th0v:
-            f_crv = -k_fold * l0v * (thh - th0h) ** 2 * (thv - th0v) * 100
-
-        dth_dxiv = np.linalg.norm(r_kjv) / np.linalg.norm(mv) ** 2 * mv
-        dth_dxlv = -np.linalg.norm(r_kjv) / np.linalg.norm(nv) ** 2 * nv
-        dth_dxjv = (np.dot(r_ijv, r_kjv) / np.linalg.norm(r_kjv) ** 2 - 1) * dth_dxiv \
-                   - np.dot(r_klv, r_kjv) / np.linalg.norm(r_kjv) ** 2 * dth_dxlv
-        dth_dxkv = (np.dot(r_klv, r_kjv) / np.linalg.norm(r_kjv) ** 2 - 1) * dth_dxlv \
-                   - np.dot(r_ijv, r_kjv) / np.linalg.norm(r_kjv) ** 2 * dth_dxiv
-
-        dth_dxih = np.linalg.norm(r_kjh) / np.linalg.norm(mh) ** 2 * mh
-        dth_dxlh = -np.linalg.norm(r_kjh) / np.linalg.norm(nh) ** 2 * nh
-        dth_dxjh = (np.dot(r_ijh, r_kjh) / np.linalg.norm(r_kjh) ** 2 - 1) * dth_dxih \
-                   - np.dot(r_klh, r_kjh) / np.linalg.norm(r_kjh) ** 2 * dth_dxlh
-        dth_dxkh = (np.dot(r_klh, r_kjh) / np.linalg.norm(r_kjh) ** 2 - 1) * dth_dxlh \
-                   - np.dot(r_ijh, r_kjh) / np.linalg.norm(r_kjh) ** 2 * dth_dxih
-
-        if not node_props[piv[0]][piv[1]][1]:
-            force_crease[piv[0]][piv[1]] += f_crv * dth_dxiv
-        if not node_props[pjv[0]][pjv[1]][1]:
-            force_crease[pjv[0]][pjv[1]] += f_crv * dth_dxjv
-        if not node_props[pkv[0]][pkv[1]][1]:
-            force_crease[pkv[0]][pkv[1]] += f_crv * dth_dxkv
-        if not node_props[plv[0]][plv[1]][1]:
-            force_crease[plv[0]][plv[1]] += f_crv * dth_dxlv
-
-        if not node_props[pih[0]][pih[1]][1]:
-            force_crease[pih[0]][pih[1]] += f_crh * dth_dxih
-        if not node_props[pjh[0]][pjh[1]][1]:
-            force_crease[pjh[0]][pjh[1]] += f_crh * dth_dxjh
-        if not node_props[pkh[0]][pkh[1]][1]:
-            force_crease[pkh[0]][pkh[1]] += f_crh * dth_dxkh
-        if not node_props[plh[0]][plh[1]][1]:
-            force_crease[plh[0]][plh[1]] += f_crh * dth_dxlh
-
 
 # @jit(cache=True, fastmath=True)
 def bar_hinge_model(t, x):
@@ -304,7 +247,8 @@ def bar_hinge_model(t, x):
     return dx_dt
 
 
-def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=0.01, k_axial_=5.0, k_facet_=0.1, k_fold_=15.0, k_str_spring_=0.75,
+def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=0.01, k_axial_=5.0, k_facet_=0.1, k_fold_=15.0,
+                 k_str_spring_=0.75,
                  dt_=0.01, t_max_=10.0):
     global geom, filename, zeta, k_axial, k_facet, k_fold, k_str_spring, dt, t_max, i_max, j_max, node_props, bars, \
         hinges, vhinges, hhinges, force_external, force_axial, force_crease, force_damping, nodes0, vel0, t_sim, x0, \
@@ -343,8 +287,6 @@ def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=0.01, k_axial_=5.0, 
     t_sim = np.linspace(0, t_max, int(t_max / dt) + 1)
     x0 = np.hstack((nodes0.reshape(i_max * j_max * 3), vel0.reshape(i_max * j_max * 3)))
 
-    print(t_sim)
-
     computation_progress = 0
     pbar = None
 
@@ -364,6 +306,6 @@ if __name__ == '__main__':
     xn = 5
     yn = 5
 
-    geom = BistableMaterialGeometry(a, xn, yn, False)
+    geom = LiveOrigamiFoldGeometry(a, xn, yn, False)
     filename = 'SimpleSpring.pkl'
     get_solution(geom, filename, 0.01, 20.0, 0.75, 0.8, 0.01, 20.0)

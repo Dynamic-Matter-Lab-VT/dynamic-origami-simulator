@@ -5,8 +5,8 @@ This code models bistable material structures defined in the geometry classes in
 It solves the equations of motion for the origami structure and saves the simulation results.
 
 Author: Yogesh Phalak
-Date: 2023-08-29
-Filename: BistableMaterialDynamicModel.py
+Date: 2025-10-01
+Filename: KConeModel.py
 
 """
 
@@ -16,7 +16,7 @@ from scipy.integrate import solve_ivp
 from numba import jit, prange
 from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning, NumbaWarning
 import warnings
-from src.geometries.live_origami_geom import LiveOrigamiFoldGeometry
+from src.geometries.k_cone_geometry import KConeGeometry
 from tqdm import tqdm
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
@@ -73,12 +73,9 @@ def update_node_properties():
 
     """
     global node_props, i_max, j_max
-    # node_props[i_max // 2][j_max // 2][1] = True
-    # node_props[i_max // 2][j_max // 2 - 1][1] = True
-    # node_props[i_max // 2 - 1][j_max // 2][1] = True
-    # node_props[i_max // 2 - 1][j_max // 2 - 1][1] = True
-    node_props[i_max // 2 - 1][0][1] = True
-    node_props[i_max // 2 - 1][j_max - 1][1] = True
+    n = i_max // 4
+    for i in range(n):
+        node_props[(4 * i + 1) % (4 * n)][0][1] = True
 
 
 def initialize_forces():
@@ -152,23 +149,22 @@ def calculate_axial_force(nodes, vel, t):
             typ = bars[i][3]
 
         if typ == 'hydrogel':
-            # l0 = l0 * (1.6 + 0.9 * np.sin(2 * np.pi * t / 3.0))
-            if t < 1.0:
-                l0 = l0 * 1.5
-            elif t < 2.0:
-                l0 = l0 * 0.7
-            elif t < 3.0:
-                l0 = l0 * 1.5
+            l0 = l0 * (1.6 + 0.9 * np.sin(2 * np.pi * t / 3.0))
+            # if t < 1.0:
+            #     l0 = l0 * 1.5
+            # elif t < 2.0:
+            #     l0 = l0 * 0.7
+            # elif t < 3.0:
+            #     l0 = l0 * 1.5
+            k = k_str_spring
+        else:
+            k = k_axial
 
         n = nodes[p1[0]][p1[1]] - nodes[p0[0]][p0[1]]
         l_cr = np.linalg.norm(n)
         n = n / l_cr
         c = 2 * zeta * np.sqrt(k_axial * l0)
 
-        if l0 > a:
-            k = k_str_spring
-        else:
-            k = k_axial
         if not node_props[p0[0]][p0[1]][1]:
             force_axial[p0[0]][p0[1]] += k * (l_cr - l0) / l0 * n
             force_damping[p0[0]][p0[1]] += c * (vel[p1[0]][p1[1]] - vel[p0[0]][p0[1]])
@@ -270,7 +266,7 @@ def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=0.01, k_axial_=5.0, 
                  dt_=0.01, t_max_=10.0):
     global geom, filename, zeta, k_axial, k_facet, k_fold, k_str_spring, dt, t_max, i_max, j_max, node_props, bars, \
         hinges, vhinges, hhinges, force_external, force_axial, force_crease, force_damping, nodes0, vel0, t_sim, x0, \
-        computation_progress, pbar, a, xn, yn
+        computation_progress, pbar
 
     geom = geom_
     filename = filename_
@@ -282,17 +278,11 @@ def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=0.01, k_axial_=5.0, 
     dt = dt_
     t_max = t_max_
 
-    a = geom.a
-    xn = geom.xn
-    yn = geom.yn
-
     i_max = geom.i_max
     j_max = geom.j_max
     node_props = [[[0.01, False] for j in range(0, j_max)] for i in range(0, i_max)]
     bars = geom.bars
     hinges = geom.hinges
-    vhinges = geom.vhinges
-    hhinges = geom.hhinges
 
     force_external = np.zeros((i_max, j_max, 3))
     force_axial = np.zeros((i_max, j_max, 3))
@@ -320,10 +310,6 @@ def get_solution(geom_, filename_='SimpleSpring.pkl', zeta_=0.01, k_axial_=5.0, 
 
 
 if __name__ == '__main__':
-    a = 0.5
-    xn = 5
-    yn = 5
-
-    geom = LiveOrigamiFoldGeometry(a, xn, yn, False)
-    filename = 'SimpleSpring.pkl'
-    get_solution(geom, filename, 0.01, 20.0, 0.75, 0.8, 0.01, 20.0)
+    geom = KConeGeometry(visualize=False)
+    filename = 'KCone.pkl'
+    get_solution(geom, filename, 0.01, 20.0, 0.75, 0.0, 0.01, 20.0)

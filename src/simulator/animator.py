@@ -152,7 +152,10 @@ def simulate(geom_, solution_):
                 colors = [[vp.color.white for j in range(0, j_max)] for i in range(0, i_max)]
 
                 for bar in geom.bars:
-                    [p0, p1, l0] = bar
+                    # [p0, p1, l0] = bar
+                    p0 = bar[0]
+                    p1 = bar[1]
+                    l0 = bar[2]
                     strain = abs(np.linalg.norm(geom.nodes[p0[0]][p0[1]] - geom.nodes[p1[0]][p1[1]]) / l0 - 1)
                     strains[p0[0]][p0[1]] += strain * strain_scale
                     strains[p1[0]][p1[1]] += strain * strain_scale

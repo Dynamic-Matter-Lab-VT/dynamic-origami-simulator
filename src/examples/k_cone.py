@@ -1,17 +1,16 @@
 import pickle
 from src.simulator.animator import *
-from src.geometries.live_origami_geom import LiveOrigamiFoldGeometry
+from src.geometries.k_cone_geometry import KConeGeometry
 import os
 
 if __name__ == '__main__':
     data_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '/../data/simulations/'
-    filename = data_dir + 'live_origami_fold_test.pkl'
-    # filename = data_dir + 'live_origami_fold_sq_test.pkl'
+    k = 6  # number of sides
+    filename = data_dir + str(k) + '_cone_test.pkl'
     with open(filename, 'rb') as f:
         solution = pickle.load(f)
 
     params = solution.sol
-    [geometryType, a, xn, yn, dt] = params
-    geom = LiveOrigamiFoldGeometry(a=a, xn=xn, yn=yn, visualize=True)
-
+    [geometryType, k, l, h, th_c, hg_th, dt] = params
+    geom = KConeGeometry(k=k, l=l, h=h, th_c=th_c, hg_th=hg_th, visualize=True)
     simulate(geom, solution)

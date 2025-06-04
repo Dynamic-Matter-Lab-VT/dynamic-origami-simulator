@@ -81,21 +81,21 @@ class BaseGeometry:
             for i in range(0, self.i_max - 1):
                 l0 = np.linalg.norm(self.nodes[i + 1, j + 1] - self.nodes[i, j])
                 self.add_bar([i, j], [i + 1, j + 1], l0)
-                self.add_hinge([i, j], [i + 1, j + 1],
-                               [i, j + 1], [i + 1, j], np.pi, l0, 'facet')
+                # self.add_hinge([i, j], [i + 1, j + 1],
+                #                [i, j + 1], [i + 1, j], np.pi, l0, 'facet')
 
         # folds
         for j in range(1, self.j_max - 1):
             for i in range(0, self.i_max - 1):
                 l0 = np.linalg.norm(self.nodes[i + 1, j] - self.nodes[i, j])
                 self.add_bar([i, j], [i + 1, j], l0)
-                self.add_hinge([i, j], [i + 1, j], [i + 1, j + 1], [i, j - 1], np.pi, l0, 'fold')
+                # self.add_hinge([i, j], [i + 1, j], [i + 1, j + 1], [i, j - 1], np.pi, l0, 'fold')
 
         for j in range(0, self.j_max - 1):
             for i in range(1, self.i_max - 1):
                 l0 = np.linalg.norm(self.nodes[i, j + 1] - self.nodes[i, j])
                 self.add_bar([i, j], [i, j + 1], l0)
-                self.add_hinge([i, j], [i, j + 1], [i - 1, j], [i + 1, j + 1], np.pi, l0, 'fold')
+                # self.add_hinge([i, j], [i, j + 1], [i - 1, j], [i + 1, j + 1], np.pi, l0, 'fold')
 
     def draw(self):
         if not self.visualize:

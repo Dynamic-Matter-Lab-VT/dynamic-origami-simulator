@@ -92,6 +92,7 @@ class BioGrid:
             for j in prange(self.n):
                 if np.random.rand() < 0.25:
                     self.cells[i, j] = 1
+        pass
 
     def mouse_callback(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -144,9 +145,9 @@ class BioGrid:
             self.nodes[-1][0] += 1 * np.array([1, -1])
             self.nodes[-1][-1] += 1 * np.array([1, 1])
 
-        if self.t - self.t // 1 > 0.99:
-            self.init_cells()
-            self.init_bars()
+        # if self.t - self.t // 1 > 0.99:
+        #     self.init_cells()
+        #     self.init_bars()
 
     def get_total_energy(self):
         energy = 0

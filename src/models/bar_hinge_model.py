@@ -26,6 +26,7 @@ warnings.simplefilter('ignore', category=NumbaWarning)
 
 @jit(fastmath=True, cache=True)
 def get_angle(m, n, rkl):
+    # No change
     """
         Calculate the angle between two vectors in 3D space.
 
@@ -36,7 +37,6 @@ def get_angle(m, n, rkl):
 
         Returns:
             float: The angle between vectors m and n.
-
     """
     if np.linalg.norm(m) == 0 or np.linalg.norm(n) == 0:
         return 0
@@ -50,6 +50,7 @@ def get_angle(m, n, rkl):
 
 @jit(fastmath=True, cache=True)
 def get_vector(pa, pb, nodes):
+    # No change
     """
         Calculate the vector between two nodes.
 
@@ -66,11 +67,14 @@ def get_vector(pa, pb, nodes):
 
 
 def update_node_properties():
+    # change
     """
        Update the properties of the nodes.
 
        This function updates the properties of the nodes (mass and fixed) based on certain conditions.
 
+        0: mass
+        1: fixed (condition)
     """
     global node_props, i_max, j_max
     for i in prange(0, i_max):
@@ -81,6 +85,7 @@ def update_node_properties():
 
 
 def initialize_forces():
+    # No change
     """
         Initialize the force arrays.
 
@@ -96,6 +101,7 @@ def initialize_forces():
 
 @jit(fastmath=True, cache=True)
 def u(t):
+    # No change
     """
         Calculate the velocity of fixed points in the y-direction as a function of time.
 
@@ -114,6 +120,7 @@ def u(t):
 
 @jit(parallel=True, cache=True, fastmath=True)
 def calculate_external_force(nodes, vel, t):
+    # change
     """
         Calculate the external forces acting on the nodes.
 
@@ -136,6 +143,7 @@ def calculate_external_force(nodes, vel, t):
 
 @jit(parallel=True, cache=True, fastmath=True)
 def calculate_axial_force(nodes, vel, t):
+    # No change
     """
         Calculate the axial forces acting on the bars.
 
@@ -162,6 +170,7 @@ def calculate_axial_force(nodes, vel, t):
 
 @jit(cache=True, fastmath=True, parallel=True)
 def calculate_crease_force(nodes, vel, t):
+    # No change
     """
        Calculate the crease forces acting on the hinges.
 
@@ -211,6 +220,7 @@ def calculate_crease_force(nodes, vel, t):
 
 # @jit(cache=True, fastmath=True)
 def bar_hinge_model(t, x):
+    # No change
     """
         Compute the time derivatives of the state variables.
 

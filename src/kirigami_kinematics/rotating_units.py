@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.widgets import Button, Slider
+from matplotlib.widgets import Slider
 
 
 def transform(th_, x0_=np.array([0, 0, 1]).T):
@@ -19,8 +19,10 @@ def apply_reflection_x(sqs_):
 def plot_sqs(unit_, ax_):
     sqs_, rect_, th_ = unit_
     for sq_ in sqs_:
+        ax_.fill(sq_[0, :], sq_[1, :], alpha=0.5, edgecolor='black', linewidth=1, facecolor='blue')
+
         ax_.plot(sq_[0, :], sq_[1, :], 'b-')
-        ax_.plot(sq_[0, :], sq_[1, :], 'ro')
+        ax_.plot(sq_[0, :], sq_[1, :], 'ro', markersize=2)
     ax_.plot(rect_[0, :], rect_[1, :], 'g--')
 
 
@@ -66,28 +68,61 @@ def get_next_unit(unit_, th_, rebase=True):
 if __name__ == "__main__":
     a = 1
     b = 1
-
     sq0 = np.array([[0, 0, 1],
                     [0, b, 1],
                     [-a, b, 1],
                     [-a, 0, 1],
                     [0, 0, 1]]).T
 
-    th0 = np.pi / 6
-    th1 = np.pi / 6
+    num_units = 2  # Number of units to visualize
 
-    unit0 = get_unit0([sq0], th0)
-    unit1 = get_next_unit(unit0, th1)
-    # unit2 = get_next_unit(unit1, np.pi / 6)
+    # Initial values
+    th0s = [np.pi / 6] * num_units
 
     fig, ax = plt.subplots()
-    # plot_sqs(unit0, ax)
-    plot_sqs(unit1, ax)
-    # plot_sqs(unit2, ax)
+    plt.subplots_adjust(bottom=0.3)  # Make space for sliders
 
-    plt.axis('equal')
-    plt.grid()
-    plt.title("Rotating Square")
-    plt.xlabel("X")
-    plt.ylabel("Y")
+    # Create initial plot
+    units = [get_unit0([sq0], th0s[0])]
+    for i in range(1, num_units):
+        units.append(get_next_unit(units[i - 1], th0s[i]))
+    plot_lines = []
+
+
+    def update_plot(ths):
+        ax.clear()
+        units = [get_unit0([sq0], ths[0])]
+        for i in range(1, num_units):
+            units.append(get_next_unit(units[i - 1], ths[i]))
+
+        plot_sqs(units[-1], ax)
+        ax.set_aspect('equal')
+        ax.grid(True)
+        ax.set_title("Rotating Square")
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        fig.canvas.draw_idle()
+
+
+    # # Sliders: th0 and th1
+    # ax_th0 = plt.axes([0.2, 0.15, 0.65, 0.03])
+    # ax_th1 = plt.axes([0.2, 0.1, 0.65, 0.03])
+
+    sliders = []
+
+    # slider_th0 = Slider(ax_th0, 'θ₀', 0, np.pi / 2, valinit=init_th0)
+    # slider_th1 = Slider(ax_th1, 'θ₁', 0, np.pi / 2, valinit=init_th1)
+    for i in range(num_units):
+        ax_th = plt.axes([0.2, 0.15 - i * 0.05, 0.65, 0.03])
+        sliders.append(Slider(ax_th, f'θ_{i}', 0, np.pi / 2, valinit=th0s[i]))
+
+    # slider_th0.on_changed(lambda val: update_plot(slider_th0.val, slider_th1.val))
+    # slider_th1.on_changed(lambda val: update_plot(slider_th0.val, slider_th1.val))
+    for i, slider in enumerate(sliders):
+        slider.on_changed(lambda val, idx=i: update_plot([s.val for s in sliders]))
+
+    # Initial plot
+    # update_plot(init_th0, init_th1)
+    update_plot(th0s)
+
     plt.show()

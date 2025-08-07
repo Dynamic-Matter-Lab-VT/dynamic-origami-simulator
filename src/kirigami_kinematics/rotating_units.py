@@ -47,7 +47,7 @@ def get_unit0(sq_, th_, rebase=True):
 
 def get_next_unit(unit_, th_, rebase=True):
     sqs_p, rect_p, th_p = unit_
-    th_ = th_ + th_p
+    # th_ = th_ + th_p
     sup_rects_, new_rect_, th_ = get_unit0([rect_p], th_, rebase=False)
 
     sqs_p_r = apply_reflection_x(sqs_p)
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                     [-a, 0, 1],
                     [0, 0, 1]]).T
 
-    num_units = 2  # Number of units to visualize
+    num_units = 3  # Number of units to visualize
 
     # Initial values
     th0s = [np.pi / 6] * num_units
@@ -104,25 +104,15 @@ if __name__ == "__main__":
         fig.canvas.draw_idle()
 
 
-    # # Sliders: th0 and th1
-    # ax_th0 = plt.axes([0.2, 0.15, 0.65, 0.03])
-    # ax_th1 = plt.axes([0.2, 0.1, 0.65, 0.03])
-
     sliders = []
 
-    # slider_th0 = Slider(ax_th0, 'θ₀', 0, np.pi / 2, valinit=init_th0)
-    # slider_th1 = Slider(ax_th1, 'θ₁', 0, np.pi / 2, valinit=init_th1)
     for i in range(num_units):
         ax_th = plt.axes([0.2, 0.15 - i * 0.05, 0.65, 0.03])
         sliders.append(Slider(ax_th, f'θ_{i}', 0, np.pi / 2, valinit=th0s[i]))
 
-    # slider_th0.on_changed(lambda val: update_plot(slider_th0.val, slider_th1.val))
-    # slider_th1.on_changed(lambda val: update_plot(slider_th0.val, slider_th1.val))
     for i, slider in enumerate(sliders):
         slider.on_changed(lambda val, idx=i: update_plot([s.val for s in sliders]))
 
-    # Initial plot
-    # update_plot(init_th0, init_th1)
     update_plot(th0s)
 
     plt.show()

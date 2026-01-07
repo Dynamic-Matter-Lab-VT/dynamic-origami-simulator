@@ -118,7 +118,7 @@ def u(t):
     return 2.5 * np.sin(2 * np.pi * f1 * t) * np.sin(2 * np.pi * f2 * t) * np.sin(2 * np.pi * f3 * t)
 
 
-@jit(parallel=True, cache=True, fastmath=True)
+# @jit(parallel=True, cache=True, fastmath=True)
 def calculate_external_force(nodes, vel, t):
     # change
     """
@@ -141,7 +141,7 @@ def calculate_external_force(nodes, vel, t):
                 # pass
 
 
-@jit(parallel=True, cache=True, fastmath=True)
+# @jit(parallel=True, cache=True, fastmath=True)
 def calculate_axial_force(nodes, vel, t):
     # No change
     """
@@ -168,7 +168,7 @@ def calculate_axial_force(nodes, vel, t):
             force_damping[p1[0]][p1[1]] += c * (vel[p0[0]][p0[1]] - vel[p1[0]][p1[1]])
 
 
-@jit(cache=True, fastmath=True, parallel=True)
+# @jit(cache=True, fastmath=True, parallel=True)
 def calculate_crease_force(nodes, vel, t):
     # No change
     """

@@ -1,3 +1,4 @@
+#file src/examples/miura_ori_tessellation.py
 import pickle
 from src.simulator.animator import *
 from src.geometries.miura_ori_geom import MiuraOriGeometry

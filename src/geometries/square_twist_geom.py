@@ -1,5 +1,34 @@
 import numpy as np
-import vpython as vp
+from piviz import PiVizStudio, PiVizFX, pgfx, Colors
+from piviz.ui import Label, Slider
+
+
+class SquareTwistFX(PiVizFX):
+    def __init__(self, geometry):
+        self.geometry = geometry
+
+    def setup(self):
+        if self.ui_manager:
+            self.ui_manager.set_panel_title("Square Twist Geometry")
+            self.ui_manager.add_widget("info", Label("Adjust parameters:", color=(1, 1, 1, 1.0)))
+            
+            self.ui_manager.add_widget("slider_phi", Slider(
+                label="Phi",
+                min_val=0.0, max_val=np.pi / 2,
+                initial_val=self.geometry.phi,
+                callback=self._update_phi
+            ))
+        
+        if self.camera:
+            self.camera.distance = 10.0
+            self.camera.set_view('iso')
+
+    def _update_phi(self, value):
+        self.geometry.phi = float(value)
+
+    def render(self, time, dt):
+        self.geometry.update_nodes()
+        self.geometry.draw_piviz()
 
 
 class SquareTwistGeometry:
@@ -28,23 +57,8 @@ class SquareTwistGeometry:
         self.bars = []
         self.hinges = []
 
-        if self.visualize:
-            self.scene = None
-            self.crease_curves = []
-            self.facet_curves = []
-            self.init_scene()
-            self.vp_nodes = [[vp.vertex(pos=vp.vector(0, 0, 0), color=vp.color.white)
-                              for j in range(0, self.j_max)] for i in range(0, self.i_max)]
-            self.draw()
-
         self.update_nodes()
         self.add_bar_hinges()
-
-    def init_scene(self):
-        self.scene = vp.canvas(title='Square Twist Simulation', width=1000, height=800,
-                               x=0,
-                               y=0,
-                               center=vp.vector(0, 0, 0), background=vp.color.white, fov=1)
 
     def update_nodes(self):
         self.nodes = np.zeros((self.i_max, self.j_max, 3))
@@ -76,9 +90,6 @@ class SquareTwistGeometry:
 
         self.nodes = self.nodes * self.l / 2
 
-        if self.visualize:
-            self.update_vp_nodes()
-
     def add_bar(self, p0, p1, l0):
         self.bars.append([p0, p1, l0])
 
@@ -86,12 +97,8 @@ class SquareTwistGeometry:
         self.hinges.append([p0, p1, pa, pb, th0, l0, type])
 
     def update_vp_nodes(self, colors=None):
-        for j in range(0, self.j_max):
-            for i in range(0, self.i_max):
-                self.vp_nodes[i][j].pos = vp.vector(self.nodes[i, j, 0], self.nodes[i, j, 1], self.nodes[i, j, 2])
-                if colors is not None:
-                    self.vp_nodes[i][j].color = colors[i][j]
-        self.update_curves()
+        # Deprecated
+        pass
 
     def add_bar_hinges(self):
 
@@ -159,64 +166,39 @@ class SquareTwistGeometry:
         self.add_hinge([2, 1], [2, 2], [3, 2], [1, 1], dth, self.l, 'fold')
         self.add_hinge([2, 1], [1, 1], [2, 2], [2, 0], dth, self.l, 'fold')
 
-    def draw(self):
+    def draw_piviz(self):
         if not self.visualize:
             return
 
         # facets
         for idx in self.h_idxs:
-            vp.triangle(vs=[self.vp_nodes[idx[0][0]][idx[0][1]],
-                            self.vp_nodes[idx[1][0]][idx[1][1]],
-                            self.vp_nodes[idx[2][0]][idx[2][1]]],
-                        color=vp.color.red)
-            vp.triangle(vs=[self.vp_nodes[idx[0][0]][idx[0][1]],
-                            self.vp_nodes[idx[1][0]][idx[1][1]],
-                            self.vp_nodes[idx[3][0]][idx[3][1]]],
-                        color=vp.color.red)
+            v0 = tuple(self.nodes[idx[0][0]][idx[0][1]])
+            v1 = tuple(self.nodes[idx[1][0]][idx[1][1]])
+            v2 = tuple(self.nodes[idx[2][0]][idx[2][1]])
+            v3 = tuple(self.nodes[idx[3][0]][idx[3][1]])
+            
+            pgfx.draw_triangle(v0, v1, v2, color=Colors.RED)
+            pgfx.draw_triangle(v0, v1, v3, color=Colors.RED)
 
-            self.facet_curves.append(vp.curve(pos=[self.vp_nodes[idx[0][0]][idx[0][1]].pos,
-                                                   self.vp_nodes[idx[1][0]][idx[1][1]].pos],
-                                              color=vp.color.purple, radius=0.01))
+            # Facet diagonal
+            pgfx.draw_line(v0, v1, color=Colors.PURPLE, width=1.0)
 
+        # Crease curves
         for j in range(self.j_max - 1):
             for i in range(self.i_max - 1):
-                self.crease_curves.append(vp.curve(pos=[self.vp_nodes[i][j].pos,
-                                                        self.vp_nodes[i + 1][j].pos,
-                                                        self.vp_nodes[i + 1][j + 1].pos,
-                                                        self.vp_nodes[i][j + 1].pos,
-                                                        self.vp_nodes[i][j].pos],
-                                                   color=vp.color.red,
-                                                   radius=0.01))
-
-    def update_curves(self):
-        n = 0
-        for i in range(0, self.i_max - 1):
-            for j in range(0, self.j_max - 1):
-                self.crease_curves[n].modify(0, pos=self.vp_nodes[i][j].pos)
-                self.crease_curves[n].modify(1, pos=self.vp_nodes[i + 1][j].pos)
-                self.crease_curves[n].modify(2, pos=self.vp_nodes[i + 1][j + 1].pos)
-                self.crease_curves[n].modify(3, pos=self.vp_nodes[i][j + 1].pos)
-                self.crease_curves[n].modify(4, pos=self.vp_nodes[i][j].pos)
-                n += 1
-
-        n = 0
-        for idx in self.h_idxs:
-            self.facet_curves[n].modify(0, pos=self.vp_nodes[idx[0][0]][idx[0][1]].pos)
-            self.facet_curves[n].modify(1, pos=self.vp_nodes[idx[1][0]][idx[1][1]].pos)
-            n += 1
-
-    def widget(self):
-        vp.slider(min=0, max=np.pi / 2, value=self.phi, bind=self.slider_phi)
-
-    def slider_phi(self, phi):
-        self.phi = phi.value
+                points = [
+                    tuple(self.nodes[i, j]),
+                    tuple(self.nodes[i + 1, j]),
+                    tuple(self.nodes[i + 1, j + 1]),
+                    tuple(self.nodes[i, j + 1]),
+                    tuple(self.nodes[i, j])
+                ]
+                pgfx.draw_path(points, color=Colors.RED, width=1.0)
 
     def spin(self):
         if self.visualize:
-            self.widget()
-            while True:
-                self.update_nodes()
-                vp.rate(30)
+            studio = PiVizStudio(scene_fx=SquareTwistFX(self))
+            studio.run()
 
 
 if __name__ == '__main__':

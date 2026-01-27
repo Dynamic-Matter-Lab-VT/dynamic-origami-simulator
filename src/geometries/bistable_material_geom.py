@@ -1,5 +1,45 @@
 import numpy as np
-import vpython as vp
+from piviz import PiVizStudio, PiVizFX, pgfx, Colors
+from piviz.ui import Label, Slider
+
+
+class BistableMaterialFX(PiVizFX):
+    def __init__(self, geometry):
+        self.geometry = geometry
+
+    def setup(self):
+        if self.ui_manager:
+            self.ui_manager.set_panel_title("Bistable Material Geometry")
+            self.ui_manager.add_widget("info", Label("Adjust parameters:", color=(1, 1, 1, 1.0)))
+            
+            self.ui_manager.add_widget("slider_a", Slider(
+                label="Parameter a",
+                min_val=0.1, max_val=2.0,
+                initial_val=self.geometry.a,
+                callback=self._update_a
+            ))
+            
+            self.ui_manager.add_widget("slider_r_str", Slider(
+                label="r_str",
+                min_val=0.1, max_val=2.0,
+                initial_val=self.geometry.r_str,
+                callback=self._update_r_str
+            ))
+        
+        if self.camera:
+            self.camera.distance = 15.0
+            self.camera.set_view('iso')
+
+    def _update_a(self, value):
+        self.geometry.a = float(value)
+        self.geometry.b = self.geometry.a * 2 ** 0.5
+
+    def _update_r_str(self, value):
+        self.geometry.r_str = float(value)
+
+    def render(self, time, dt):
+        self.geometry.update_nodes()
+        self.geometry.draw_piviz()
 
 
 class BistableMaterialGeometry:
@@ -21,25 +61,8 @@ class BistableMaterialGeometry:
         self.vhinges = []
         self.hhinges = []
 
-        if self.visualize:
-            self.scene = None
-            self.crease_curves = []
-            self.facet_curves = []
-            self.stress_curves = []
-            self.init_scene()
-            self.vp_nodes = [[vp.vertex(pos=vp.vector(0, 0, 0), color=vp.color.white)
-                              for j in range(0, self.j_max)] for i in range(0, self.i_max)]
-            self.draw()
-
         self.update_nodes()
         self.add_bar_hinges()
-
-    def init_scene(self):
-        self.scene = vp.canvas(title='Bistable Material Simulation', width=1000, height=800,
-                               x=0,
-                               y=0,
-                               center=vp.vector(int(self.a * self.i_max / 2), int(self.a * self.j_max / 2), 0),
-                               background=vp.color.white, fov=1)
 
     def update_nodes(self):
         self.fa = self.a * 2 ** 0.5
@@ -48,9 +71,6 @@ class BistableMaterialGeometry:
         for j in range(0, self.j_max):
             for i in range(0, self.i_max):
                 self.nodes[i, j] = np.array([i * self.a, j * self.a, 0])
-
-        if self.visualize:
-            self.update_vp_nodes()
 
     def add_bar(self, p0, p1, l0):
         self.bars.append([p0, p1, l0])
@@ -64,12 +84,8 @@ class BistableMaterialGeometry:
             self.hinges.append([p0, p1, pa, pb, th0, l0, type])
 
     def update_vp_nodes(self, colors=None):
-        for j in range(0, self.j_max):
-            for i in range(0, self.i_max):
-                self.vp_nodes[i][j].pos = vp.vector(self.nodes[i, j, 0], self.nodes[i, j, 1], self.nodes[i, j, 2])
-                if colors is not None:
-                    self.vp_nodes[i][j].color = colors[i][j]
-        self.update_curves()
+        # Deprecated
+        pass
 
     def add_bar_hinges(self):
         # edges
@@ -101,88 +117,42 @@ class BistableMaterialGeometry:
         for i in range(self.i_max):
             self.add_bar([i, 0], [i, self.j_max - 1], self.a * self.j_max * self.r_str)
 
-    def draw(self):
+    def draw_piviz(self):
         if not self.visualize:
             return
+            
         for j in range(self.j_max - 1):
             for i in range(self.i_max - 1):
-                vp.triangle(vs=[self.vp_nodes[i][j],
-                                self.vp_nodes[i + 1][j + 1],
-                                self.vp_nodes[i][j + 1]],
-                            color=vp.color.red)
+                v00 = tuple(self.nodes[i, j])
+                v10 = tuple(self.nodes[i + 1, j])
+                v01 = tuple(self.nodes[i, j + 1])
+                v11 = tuple(self.nodes[i + 1, j + 1])
+                
+                # Triangles
+                pgfx.draw_triangle(v00, v11, v01, color=Colors.RED)
+                pgfx.draw_triangle(v00, v11, v10, color=Colors.RED)
+                
+                # Facet curves (Purple)
+                pgfx.draw_path([v00, v11, v01, v10, v00], color=Colors.PURPLE, width=1.0)
+                
+                # Crease curves (Black)
+                pgfx.draw_path([v00, v10, v11, v01, v00], color=Colors.BLACK, width=1.0)
 
-                vp.triangle(vs=[self.vp_nodes[i][j],
-                                self.vp_nodes[i + 1][j + 1],
-                                self.vp_nodes[i + 1][j]],
-                            color=vp.color.red)
-
-                self.facet_curves.append(vp.curve(pos=[self.vp_nodes[i][j].pos,
-                                                       self.vp_nodes[i + 1][j + 1].pos,
-                                                       self.vp_nodes[i][j + 1].pos,
-                                                       self.vp_nodes[i + 1][j].pos,
-                                                       self.vp_nodes[i][j].pos],
-                                                  color=vp.color.purple,
-                                                  radius=0.01))
-
-                self.crease_curves.append(vp.curve(pos=[self.vp_nodes[i][j].pos,
-                                                        self.vp_nodes[i + 1][j].pos,
-                                                        self.vp_nodes[i + 1][j + 1].pos,
-                                                        self.vp_nodes[i][j + 1].pos,
-                                                        self.vp_nodes[i][j].pos],
-                                                   color=vp.color.black,
-                                                   radius=0.01))
-
+        # Stress curves
         for j in range(self.j_max):
-            self.stress_curves.append(vp.curve(pos=[self.vp_nodes[0][j].pos,
-                                                    self.vp_nodes[self.i_max - 1][j].pos],
-                                               color=vp.color.green,
-                                               radius=0.01))
+            start = tuple(self.nodes[0, j])
+            end = tuple(self.nodes[self.i_max - 1, j])
+            pgfx.draw_line(start, end, color=Colors.GREEN, width=1.0)
+            
         for i in range(self.i_max):
-            self.stress_curves.append(vp.curve(pos=[self.vp_nodes[i][0].pos,
-                                                    self.vp_nodes[i][self.j_max - 1].pos],
-                                               color=vp.color.red,
-                                               radius=0.01))
-
-    def update_curves(self):
-        n = 0
-        for i in range(0, self.i_max - 1):
-            for j in range(0, self.j_max - 1):
-                self.crease_curves[n].modify(0, pos=self.vp_nodes[i][j].pos)
-                self.crease_curves[n].modify(1, pos=self.vp_nodes[i + 1][j].pos)
-                self.crease_curves[n].modify(2, pos=self.vp_nodes[i + 1][j + 1].pos)
-                self.crease_curves[n].modify(3, pos=self.vp_nodes[i][j + 1].pos)
-                self.crease_curves[n].modify(4, pos=self.vp_nodes[i][j].pos)
-                self.facet_curves[n].modify(0, pos=self.vp_nodes[i][j].pos)
-                self.facet_curves[n].modify(1, pos=self.vp_nodes[i + 1][j + 1].pos)
-                self.facet_curves[n].modify(2, pos=self.vp_nodes[i][j + 1].pos)
-                self.facet_curves[n].modify(3, pos=self.vp_nodes[i + 1][j].pos)
-                self.facet_curves[n].modify(4, pos=self.vp_nodes[i][j].pos)
-                n += 1
-
-        # update stress curves
-        for i in range(0, self.i_max):
-            self.stress_curves[i].modify(0, pos=self.vp_nodes[i][0].pos)
-            self.stress_curves[i].modify(1, pos=self.vp_nodes[i][self.j_max - 1].pos)
-        for j in range(0, self.j_max):
-            self.stress_curves[self.i_max + j].modify(0, pos=self.vp_nodes[0][j].pos)
-            self.stress_curves[self.i_max + j].modify(1, pos=self.vp_nodes[self.i_max - 1][j].pos)
-
-    def widget(self):
-        vp.slider(min=0, max=2, value=self.a, bind=self.slider_theta)
-        vp.slider(min=0, max=2, value=self.b, bind=self.slider_gamma)
-
-    def slider_theta(self, a):
-        self.a = a.value
-
-    def slider_gamma(self, n):
-        self.n = int(n.value)
+            start = tuple(self.nodes[i, 0])
+            end = tuple(self.nodes[i, self.j_max - 1])
+            pgfx.draw_line(start, end, color=Colors.RED, width=1.0)
 
     def spin(self):
         if self.visualize:
-            self.widget()
-            while True:
-                self.update_nodes()
-                vp.rate(30)
+            studio = PiVizStudio(scene_fx=BistableMaterialFX(self))
+            studio.run()
 
 
 if __name__ == '__main__':

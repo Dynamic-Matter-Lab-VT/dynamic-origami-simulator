@@ -1,5 +1,43 @@
 import numpy as np
-import vpython as vp
+from piviz import PiVizStudio, PiVizFX, pgfx, Colors
+from piviz.ui import Label, Slider
+
+
+class GeometryFX(PiVizFX):
+    def __init__(self, geometry):
+        self.geometry = geometry
+
+    def setup(self):
+        if self.ui_manager:
+            self.ui_manager.set_panel_title("Rubber Sheet Geometry")
+            self.ui_manager.add_widget("info", Label("Adjust parameters:", color=(1, 1, 1, 1.0)))
+            
+            self.ui_manager.add_widget("slider_a", Slider(
+                label="Parameter a",
+                min_val=0.1, max_val=2.0,
+                initial_val=self.geometry.a,
+                callback=self._update_a
+            ))
+            
+            self.ui_manager.add_widget("slider_b", Slider(
+                label="Parameter b",
+                min_val=0.1, max_val=2.0,
+                initial_val=self.geometry.b,
+                callback=self._update_b
+            ))
+        
+        if self.camera:
+            self.camera.distance = 10.0
+
+    def _update_a(self, value):
+        self.geometry.a = float(value)
+
+    def _update_b(self, value):
+        self.geometry.b = float(value)
+
+    def render(self, time, dt):
+        self.geometry.update_nodes()
+        self.geometry.draw_piviz()
 
 
 class BaseGeometry:
@@ -19,24 +57,8 @@ class BaseGeometry:
         self.bars = []
         self.hinges = []
 
-        if self.visualize:
-            self.scene = None
-            self.crease_curves = []
-            self.facet_curves = []
-            self.init_scene()
-            self.vp_nodes = [[vp.vertex(pos=vp.vector(0, 0, 0), color=vp.color.white)
-                              for j in range(0, self.j_max)] for i in range(0, self.i_max)]
-            self.draw()
-
         self.update_nodes()
         self.add_bar_hinges()
-
-    def init_scene(self):
-        self.scene = vp.canvas(title='Rubber Sheet Geometry', width=1000, height=800,
-                               x=0,
-                               y=0,
-                               center=vp.vector(int(self.a * self.i_max / 2), int(self.b * self.j_max / 2), 0),
-                               background=vp.color.white, fov=1)
 
     def update_nodes(self):
         self.fa = (self.a ** 2 + self.b ** 2) ** 0.5
@@ -46,9 +68,6 @@ class BaseGeometry:
             for i in range(0, self.i_max):
                 self.nodes[i, j] = np.array([i * self.a, j * self.b, 0])
 
-        if self.visualize:
-            self.update_vp_nodes()
-
     def add_bar(self, p0, p1, l0):
         self.bars.append([p0, p1, l0])
 
@@ -56,12 +75,8 @@ class BaseGeometry:
         self.hinges.append([p0, p1, pa, pb, th0, l0, type])
 
     def update_vp_nodes(self, colors=None):
-        for j in range(0, self.j_max):
-            for i in range(0, self.i_max):
-                self.vp_nodes[i][j].pos = vp.vector(self.nodes[i, j, 0], self.nodes[i, j, 1], self.nodes[i, j, 2])
-                if colors is not None:
-                    self.vp_nodes[i][j].color = colors[i][j]
-        self.update_curves()
+        # Deprecated: vpython visualization removed
+        pass
 
     def add_bar_hinges(self):
         # edges
@@ -81,15 +96,15 @@ class BaseGeometry:
             for i in range(0, self.i_max - 1):
                 l0 = np.linalg.norm(self.nodes[i + 1, j + 1] - self.nodes[i, j])
                 self.add_bar([i, j], [i + 1, j + 1], l0)
-                self.add_hinge([i, j], [i + 1, j + 1],
+                self.add_hinge([i, j], [i, j + 1],
                                [i, j + 1], [i + 1, j], np.pi, l0, 'facet')
 
         # folds
         for j in range(1, self.j_max - 1):
             for i in range(0, self.i_max - 1):
                 l0 = np.linalg.norm(self.nodes[i + 1, j] - self.nodes[i, j])
-                self.add_bar([i, j], [i + 1, j], l0)
-                self.add_hinge([i, j], [i + 1, j], [i + 1, j + 1], [i, j - 1], np.pi, l0, 'fold')
+                self.add_bar([i, j], [i, j + 1], l0)
+                self.add_hinge([i, j], [i, j + 1], [i + 1, j + 1], [i, j - 1], np.pi, l0, 'fold')
 
         for j in range(0, self.j_max - 1):
             for i in range(1, self.i_max - 1):
@@ -97,62 +112,29 @@ class BaseGeometry:
                 self.add_bar([i, j], [i, j + 1], l0)
                 self.add_hinge([i, j], [i, j + 1], [i - 1, j], [i + 1, j + 1], np.pi, l0, 'fold')
 
-    def draw(self):
+    def draw_piviz(self):
         if not self.visualize:
             return
         for j in range(0, self.j_max - 1):
             for i in range(0, self.i_max - 1):
-                vp.triangle(vs=[self.vp_nodes[i][j],
-                                self.vp_nodes[i + 1][j + 1],
-                                self.vp_nodes[i + 1][j]],
-                            color=vp.color.red)
+                p00 = tuple(self.nodes[i, j])
+                p10 = tuple(self.nodes[i + 1, j])
+                p01 = tuple(self.nodes[i, j + 1])
+                p11 = tuple(self.nodes[i + 1, j + 1])
 
-                vp.triangle(vs=[self.vp_nodes[i][j],
-                                self.vp_nodes[i + 1][j + 1],
-                                self.vp_nodes[i][j + 1]],
-                            color=vp.color.red)
+                pgfx.draw_triangle(v1=p00, v2=p11, v3=p10, color=Colors.RED)
+                pgfx.draw_triangle(v1=p00, v2=p11, v3=p01, color=Colors.RED)
 
-                self.crease_curves.append(vp.curve(pos=[self.vp_nodes[i][j].pos,
-                                                        self.vp_nodes[i + 1][j].pos,
-                                                        self.vp_nodes[i + 1][j + 1].pos,
-                                                        self.vp_nodes[i][j + 1].pos,
-                                                        self.vp_nodes[i][j].pos],
-                                                   color=vp.color.gray(0.5),
-                                                   radius=0.01))
+                pgfx.draw_path(points=[p00, p10, p11, p01, p00],
+                               color=(0.5, 0.5, 0.5),
+                               width=1.0)
 
-                self.facet_curves.append(vp.curve(pos=[self.vp_nodes[i][j].pos,
-                                                       self.vp_nodes[i + 1][j + 1].pos],
-                                                  color=vp.color.black, radius=0.01))
-
-    def update_curves(self):
-        n = 0
-        for i in range(0, self.i_max - 1):
-            for j in range(0, self.j_max - 1):
-                self.crease_curves[n].modify(0, pos=self.vp_nodes[i][j].pos)
-                self.crease_curves[n].modify(1, pos=self.vp_nodes[i + 1][j].pos)
-                self.crease_curves[n].modify(2, pos=self.vp_nodes[i + 1][j + 1].pos)
-                self.crease_curves[n].modify(3, pos=self.vp_nodes[i][j + 1].pos)
-                self.crease_curves[n].modify(4, pos=self.vp_nodes[i][j].pos)
-                self.facet_curves[n].modify(0, pos=self.vp_nodes[i][j].pos)
-                self.facet_curves[n].modify(1, pos=self.vp_nodes[i + 1][j + 1].pos)
-                n += 1
-
-    def widget(self):
-        vp.slider(min=0, max=2, value=self.a, bind=self.slider_theta)
-        vp.slider(min=0, max=2, value=self.b, bind=self.slider_gamma)
-
-    def slider_theta(self, a):
-        self.a = a.value
-
-    def slider_gamma(self, b):
-        self.b = b.value
+                pgfx.draw_line(start=p00, end=p11, color=Colors.BLACK, width=1.0)
 
     def spin(self):
         if self.visualize:
-            self.widget()
-            while True:
-                self.update_nodes()
-                vp.rate(30)
+            studio = PiVizStudio(scene_fx=GeometryFX(self))
+            studio.run()
 
 
 if __name__ == '__main__':
